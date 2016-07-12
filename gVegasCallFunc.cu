@@ -26,24 +26,29 @@ void gVegasCallFunc(float* gFval, int* gIAval)
    if (tid<nCubeNpg) {
 
       unsigned ia[ndim_max];
-      
+
       unsigned int tidRndm = tid;
-      
+
       int kg[ndim_max];
-      
+
       unsigned igg = ig;
       for (int j=0;j<g_ndim;j++) {
          kg[j] = igg%g_ng+1;
          igg /= g_ng;
       }
-      
-      //            randa(g_ndim,randm);
+
+      //Generate a random point in [0,1]^ndim.
       float randm[ndim_max];
       fxorshift128(tidRndm, g_ndim, randm);
-      
+
       float x[ndim_max];
-      
+
       float wgt = g_xjac;
+      /*
+      This piece of code places the random point in the domain of integration,
+      g_xi will change at every iteration as a result of the refining step, so
+      the weight will change as well.
+      */
       for (int j=0;j<g_ndim;j++) {
          float xo,xn,rc;
          xn = (kg[j]-randm[j])*g_dxg+1.f;
@@ -58,9 +63,9 @@ void gVegasCallFunc(float* gFval, int* gIAval)
          x[j] = g_xl[j]+rc*g_dx[j];
          wgt *= xo*(float)g_nd;
       }
-      
+
       float f = wgt * func(x,wgt);
-      
+
       //      gFval[tid] = (float)typeFinal[2];
       gFval[tid] = f;
       for (int idim=0;idim<g_ndim;idim++) {

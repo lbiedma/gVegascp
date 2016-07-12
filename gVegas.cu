@@ -166,7 +166,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
    //  Set up kernel variables
    //--------------------------
    const int nGridSizeMax =  65535; //Maximum size of grid in X for Fermi.
-   //const int nGridSizeMax = 1<<31 - 1; This should be the one for current arqs.
+   //const int nGridSizeMax = 1<<31 - 1; This should be the one for current architectures.
 
    dim3 ThBk(nBlockSize);
 
@@ -193,11 +193,11 @@ void gVegas(double& avgi, double& sd, double& chi2a)
       std::cout<<std::endl;
    }
 
-   // allocate Fval
+   // allocate Fval, this will contain the values of f for every point evaluated.
    int sizeFval = nCubeNpg*sizeof(float);
 //   std::cout<<"sizeFval = "<<sizeFval<<std::endl;
 
-   // CPU
+   // CPU and equal to zero
    float* hFval;
    checkCudaErrors(cudaMallocHost((void**)&hFval, sizeFval));
    memset(hFval, '\0', sizeFval);
@@ -242,9 +242,10 @@ void gVegas(double& avgi, double& sd, double& chi2a)
       timeVegasCall += endVegasCall-startVegasCall;
 
       startVegasMove = omp_get_wtime();
+      //Moving function values to the CPU, I think this can be avoided.
       checkCudaErrors(cudaMemcpy(hFval, gFval,  sizeFval,
                                cudaMemcpyDeviceToHost));
-
+      //Moving grid attributes to the CPU, this may be more difficult...
       checkCudaErrors(cudaMemcpy(hIAval, gIAval,  sizeIAval,
                                cudaMemcpyDeviceToHost));
       endVegasMove = omp_get_wtime();
@@ -253,7 +254,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
 // *****************
 
       startVegasFill = omp_get_wtime();
-
+      //Start reduction of the values.
       ti = 0.;
       tsi = 0.;
 
