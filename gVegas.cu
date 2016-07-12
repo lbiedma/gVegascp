@@ -165,7 +165,8 @@ void gVegas(double& avgi, double& sd, double& chi2a)
    //--------------------------
    //  Set up kernel variables
    //--------------------------
-   const int nGridSizeMax =  65535;
+   const int nGridSizeMax =  65535; //Maximum size of grid in X for Fermi.
+   //const int nGridSizeMax = 1<<31 - 1; This should be the one for current arqs.
 
    dim3 ThBk(nBlockSize);
 
