@@ -5,6 +5,6 @@
 
 #include "gVegasFunc.cu"
 #include "gVegasCallFunc.cu"
-#include "gVegas.cu"
-
+//#include "gVegas.cu"
+#include "myVegas.cu"
 #endif

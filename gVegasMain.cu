@@ -24,22 +24,23 @@ int main(int argc, char* argv[])
    //------------------
    //
    // program interface:
-   //   program -n "ncall0" -i "itmx0" -a "nacc" -b "nBlockSize0"
+   //   program -n "ncall0" -i "itmx0" -a "nacc" -b "nBlockSize0" -d "ndim0"
    //
    // parameters:
    //   ncall = 1024*ncall0 is the amount of function calls
    //   itmx  = itmx0 is the maximum iterations for the algorithm
    //   acc   = nacc*0.00001f is the desired accuracy
    //   nBlockSize = nBlockSize0 is the size of the CUDA block
-   //
+   //   ndim = ndim0 is the dimension of the integration space
 
    int ncall0 = 256;
    int itmx0 = 20;
    int nacc  = 10;
    int nBlockSize0 = 256;
+   int ndim0 = 6;
    int c;
 
-   while ((c = getopt (argc, argv, "n:i:a:b:")) != -1)
+   while ((c = getopt (argc, argv, "n:i:a:b:d:")) != -1)
        switch (c)
          {
          case 'n':
@@ -54,6 +55,9 @@ int main(int argc, char* argv[])
          case 'b':
            nBlockSize0 = atoi(optarg);
            break;
+           case 'd':
+             ndim0 = atoi(optarg);
+             break;
          case '?':
            if (isprint (optopt))
              fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -70,11 +74,11 @@ int main(int argc, char* argv[])
    itmx = itmx0;
    acc = (float)nacc*0.000001f;
    nBlockSize = nBlockSize0;
+   ndim = ndim0;
 
    //cutilSafeCallNoSync(cudaSetDevice(0));
 
    mds = 1;
-   ndim = 6; //Dimension of integration space
 
    ng = 0;
    npg = 0;
@@ -91,7 +95,8 @@ int main(int argc, char* argv[])
    double sd = 0.;
    double chi2a = 0.;
 
-   gVegas(avgi, sd, chi2a);
+   //gVegas(avgi, sd, chi2a);
+   myVegas(avgi, sd, chi2a);
 
    //-------------------------
    //  Print out information
@@ -107,6 +112,14 @@ int main(int argc, char* argv[])
    std::cout<<"#==========================="<<std::endl;
    std::cout<<"# Answer                   : "<<avgi<<" +- "<<sd<<std::endl;
    std::cout<<"# Chisquare                : "<<chi2a<<std::endl;
+   std::cout<<"#==========================="<<std::endl;
+
+   //Print running times!
+   std::cout<<"#==========================="<<std::endl;
+   std::cout<<"# Function call time per iteration: " <<timeVegasCall/(double)it<<std::endl;
+   std::cout<<"# Values moving time per iteration: " <<timeVegasMove/(double)it<<std::endl;
+   std::cout<<"# Filling (reduce) time per iteration: " <<timeVegasFill/(double)it<<std::endl;
+   std::cout<<"# Refining time per iteration: " <<timeVegasRefine/(double)it<<std::endl;
    std::cout<<"#==========================="<<std::endl;
 
    //cudaThreadExit();

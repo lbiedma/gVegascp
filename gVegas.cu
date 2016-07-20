@@ -42,7 +42,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
       }
 
    }
-   std::cout<<"ng = "<<ng<<std::endl;
+   //std::cout<<"ng = "<<ng<<std::endl;
    checkCudaErrors(cudaMemcpyToSymbol(g_ndim, &ndim, sizeof(int)));
    checkCudaErrors(cudaMemcpyToSymbol(g_ng,   &ng,   sizeof(int)));
    checkCudaErrors(cudaMemcpyToSymbol(g_nd,   &nd,   sizeof(int)));

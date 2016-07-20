@@ -1,7 +1,8 @@
 #ifndef VEGAS_H
 #define VEGAS_H
 
-void gVegas(float& avgi, float& sd, float& chi2a);
+//void gVegas(float& avgi, float& sd, float& chi2a);
+void myVegas(float& avgi, float& sd, float& chi2a);
 
 #ifndef __MAIN_LOGIC
 #define EXTERN extern
