@@ -10,7 +10,7 @@ void myVegas(float& avgi, float& sd, float& chi2a);
 #define EXTERN
 #endif
 
-const int ndim_max = 20;
+const int ndim_max = 25;
 const double alph = 1.5;
 EXTERN float dx[ndim_max];
 EXTERN float randm[ndim_max];

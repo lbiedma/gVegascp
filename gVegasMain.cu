@@ -4,6 +4,7 @@
 #include <ctime>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <assert.h>
 
 // includes, project
 #include "helper_cuda.h"
@@ -76,6 +77,7 @@ int main(int argc, char* argv[])
    nBlockSize = nBlockSize0;
    ndim = ndim0;
 
+   assert(ndim <= ndim_max);
    //cutilSafeCallNoSync(cudaSetDevice(0));
 
    mds = 1;

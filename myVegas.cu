@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <cmath>
 #include <omp.h>
+#include <assert.h>
 
 #include "helper_cuda.h"
 
@@ -34,13 +35,14 @@ void myVegas(double& avgi, double& sd, double& chi2a)
    ng = 1;
 
    npg = 0;
-   std::cout<<"mds = "<<mds<<std::endl;
+   //std::cout<<"mds = "<<mds<<std::endl;
    if (mds!=0) {
 
       std::cout<<"ncall, ndim = "<<ncall<<", "<<ndim<<std::endl;
       ng = (int)pow((0.5*(double)ncall),1./(double)ndim);
       mds = 1;
       //      printf("ng = %d\n",ng);
+
       if (2*ng>=nd_max) {
          mds = -1;
          npg = ng/nd_max+1;
@@ -49,6 +51,9 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       }
 
    }
+   std::cout<<"mds = "<<mds<<std::endl;
+   //assert(mds == 1);
+
    //std::cout<<"ng = "<<ng<<std::endl;
    checkCudaErrors(cudaMemcpyToSymbol(g_ndim, &ndim, sizeof(int)));
    checkCudaErrors(cudaMemcpyToSymbol(g_ng,   &ng,   sizeof(int)));
@@ -180,10 +185,10 @@ void myVegas(double& avgi, double& sd, double& chi2a)
 
    int nGridSizeX, nGridSizeY;
    int nBlockTot = (nCubeNpg-1)/nBlockSize+1;
-   std::cout<<"nBlockTot = "<<nBlockTot<<std::endl;
+   //std::cout<<"nBlockTot = "<<nBlockTot<<std::endl;
    nGridSizeY = (nBlockTot-1)/nGridSizeMax+1;
    nGridSizeX = (nBlockTot-1)/nGridSizeY+1;
-   std::cout<<"nGridSize (x,y) = "<<nGridSizeX<<", "<<nGridSizeY<<std::endl;
+   //std::cout<<"nGridSize (x,y) = "<<nGridSizeX<<", "<<nGridSizeY<<std::endl;
    dim3 BkGd(nGridSizeX, nGridSizeY);
 
    if (nprn!=0) {
@@ -214,7 +219,7 @@ void myVegas(double& avgi, double& sd, double& chi2a)
    float* gFval;
    checkCudaErrors(cudaMalloc((void**)&gFval, sizeFval));
 
-   // allocate IAval
+   // allocate IAval, this contains information for the adaption phase.
    //   int sizeIAval = nCubeNpg*ndim*sizeof(unsigned short);
    int sizeIAval = nCubeNpg*ndim*sizeof(int);
 //   std::cout<<"sizeIAval = "<<sizeIAval<<std::endl;
@@ -318,8 +323,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
                //               std::cout<<"f = "<<f<<std::endl;
                double f2 = f*f;
                d[idim][iaj] += f2;
-               //               std::cout<<"idim, iaj, idx, f = "<<idim<<", "<<iaj
-               //                        <<", "<<idx<<", "<<f<<std::endl;
+                //            std::cout<<"idim, iaj, idx, f = "<<idim<<", "<<iaj
+                //                       <<", "<<idx<<", "<<f<<std::endl;
             }
          }
       }
@@ -360,17 +365,17 @@ void myVegas(double& avgi, double& sd, double& chi2a)
                std::cout<<"    x    delt i   convce";
                std::cout<<"    x    delt i   convce";
                std::cout<<"    x    delt i   convce"<<std::endl;
-               /*
+
                for (int i=0;i<nd;i+=3) {
                   std::cout<<std::setw(6)<<std::setprecision(2)<<std::setfill(' ')
-                           <<xi[j][i]<<" "<<di[j][i]<<" "<<d[j][i];
+                           <<xi[j][i]<<" "<<d[j][i]<<" "<<d[j][i];
                   std::cout<<std::setw(6)<<std::setprecision(2)
-                           <<xi[j][i+1]<<" "<<di[j][i+1]<<" "<<d[j][i+1];
+                           <<xi[j][i+1]<<" "<<d[j][i+1]<<" "<<d[j][i+1];
                   std::cout<<std::setw(6)<<std::setprecision(2)
-                           <<xi[j][i+2]<<" "<<di[j][i+2]<<" "<<d[j][i+2]
+                           <<xi[j][i+2]<<" "<<d[j][i+2]<<" "<<d[j][i+2]
                            <<std::endl;
                            }
-               */
+
             }
          }
       }
