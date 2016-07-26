@@ -11,7 +11,7 @@ void myVegas(float& avgi, float& sd, float& chi2a);
 #endif
 
 const int ndim_max = 25;
-const double alph = 1.5;
+const float alph = 1.5;
 EXTERN float dx[ndim_max];
 EXTERN float randm[ndim_max];
 const int nd_max = 50;
@@ -24,18 +24,21 @@ EXTERN double acc;
 EXTERN int ndim, ncall, itmx, nprn;
 
 EXTERN float xi[ndim_max][nd_max];
-EXTERN double si, si2, swgt, schi;
+EXTERN float si, si2, swgt, schi;
 EXTERN int ndo, it;
 
 //EXTERN double alph;
 EXTERN int mds;
 
-EXTERN double calls, ti, tsi;
+EXTERN double calls;
+EXTERN float ti, tsi;
 
 EXTERN int npg, ng, nd;
 EXTERN float dxg, xnd;
 
 EXTERN unsigned nCubes;
+
+//adding stuff, don't know if it's right...
 
 #undef EXTERN
 

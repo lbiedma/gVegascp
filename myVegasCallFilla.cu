@@ -1,6 +1,21 @@
 #include "vegasconst.h"
 #include "vegas.h"
 
+__device__ float d[ndim_max][nd_max];
+__device__ float dtsi;
+__device__ float dti;
+
+__global__
+void initzero(void){
+  for (int dim = 0; dim < ndim_max; dim++){
+    for (int box = 0; box < nd_max; box ++){
+      d[dim][box] = 0.0f;
+    }
+  }
+  dti = 0.0f;
+  dtsi = 0.0f;
+}
+
 __global__
 void myVegasCallFilla(int mds)
 {
@@ -18,22 +33,28 @@ void myVegasCallFilla(int mds)
    unsigned int bid  = bIdy*gDimx+bIdx;
    const unsigned int tid = bid*bDimx+tIdx;
 
-   __shared__ double d[ndim_max][nd_max];
+   //Using float for now, atomicAdd doesn't support double yet...
+   __shared__ float block_fb;
+   __shared__ float block_f2b;
 
-   int ig = tid
-   d[tid] = 0.0;
+   //int ig = tid;
+   int lane = tid % warpSize;
+   //d[tid] = 0.0;
    int kg[ndim_max];
    unsigned ia[ndim_max];
-   double fb = 0.0;
-   double f2b = 0.0;
-   __syncthreads();
+   //fb and f2b will be the accumulations of f and the "error", these values
+   //will be reduced later and stored in dti and dtsi.
+   block_fb = 0.0f;
+   block_f2b = 0.0f;
+   float fb = 0.0f;
+   float f2b = 0.0f;
 
    if (tid<g_nCubes) {
 
-      for (point = 0; point < g_npg; point++){
+      for (int point = 0; point < g_npg; point++){
         unsigned int tidRndm = tid * g_npg + point;
 
-        unsigned igg = tidRndm;
+        unsigned igg = tid;
         for (int j=0;j<g_ndim;j++) {
            kg[j] = igg%g_ng+1;
            igg /= g_ng;
@@ -66,13 +87,14 @@ void myVegasCallFilla(int mds)
           wgt *= xo*(float)g_nd;
         }
 
-        double f =(double)(wgt * func(x,wgt));
+        float f = wgt * func(x,wgt);
         fb += f;
-        double f2 = f*f;
-        f2b += f*f;
+        float f2 = f*f;
+        f2b += f2;
+        //If mds = 1, we just have to add f^2 to the corresponding space in d.
         if (mds > 0){
           for (int idim = 0; idim < g_ndim; idim++) {
-            atomicAdd(&d[idim][ia[idim]], f2);
+            atomicAdd(&(d[idim][ia[idim]]), f2);
           }
         }
       }
@@ -88,7 +110,23 @@ void myVegasCallFilla(int mds)
       }
       __syncthreads();
       //REDUCE TIME!!!
-      
+
+      for (int offset = warpSize/2; offset < 0; offset /= 2){
+        fb += __shfl_down(fb, offset);
+        f2b += __shfl_down(f2b, offset);
+      }
+
+      if (0 == lane){
+        atomicAdd(&block_fb, fb);
+        atomicAdd(&block_f2b, f2b);
+      }
+
+		  __syncthreads();
+
+      if (0 == tid){
+        atomicAdd(&dti, block_fb);
+        atomicAdd(&dtsi, block_f2b);
+      }
     }
 
 }

@@ -9,6 +9,7 @@
 
 EXTERN int nBlockSize;
 EXTERN double timeVegasCall;
+EXTERN double timeVegasCallAndFill;
 EXTERN double timeVegasMove;
 EXTERN double timeVegasFill;
 EXTERN double timeVegasRefine;
@@ -16,4 +17,3 @@ EXTERN double timeVegasRefine;
 #undef EXTERN
 
 #endif
-

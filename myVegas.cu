@@ -85,8 +85,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
    }
 
    dxg = 1.f/(float)ng;
-   double dnpg = (double)npg;
-   double dv2g = calls*calls*pow(dxg,ndim)*pow(dxg,ndim)/(dnpg*dnpg*(dnpg-1.));
+   float dnpg = (float)npg;
+   float dv2g = calls*calls*pow(dxg,ndim)*pow(dxg,ndim)/(dnpg*dnpg*(dnpg-1.));
    xnd = (float)nd;
    dxg *= xnd;
    xjac = 1.f/(float)calls;
@@ -167,10 +167,10 @@ void myVegas(double& avgi, double& sd, double& chi2a)
    // entry vegas3
 
    it = 0;
-   si = 0.;
-   si2 = 0.;
-   swgt = 0.;
-   schi = 0.;
+   si = 0.0f;
+   si2 = 0.0f;
+   swgt = 0.0f;
+   schi = 0.0f;
    //   int iflag;
    // main integration loop
 
@@ -180,11 +180,12 @@ void myVegas(double& avgi, double& sd, double& chi2a)
    //--------------------------
    //const int nGridSizeMax =  65535; //Original - Maximum size of grid in X for Fermi.
    const int nGridSizeMax = 1<<31 - 1; //This should be the one for current architectures.
+   float hd[ndim_max][nd_max];
 
    dim3 ThBk(nBlockSize);
 
    int nGridSizeX, nGridSizeY;
-   int nBlockTot = (nCubeNpg-1)/nBlockSize+1;
+   int nBlockTot = (nCubes-1)/nBlockSize+1;
    //std::cout<<"nBlockTot = "<<nBlockTot<<std::endl;
    nGridSizeY = (nBlockTot-1)/nGridSizeMax+1;
    nGridSizeX = (nBlockTot-1)/nGridSizeY+1;
@@ -199,47 +200,16 @@ void myVegas(double& avgi, double& sd, double& chi2a)
                <<" x "<<BkGd.y<<std::endl;
       int nThreadsTot = ThBk.x*BkGd.x*BkGd.y;
       std::cout<<"     Actual Number of calls ="<<std::setw(12)
-               <<nThreadsTot<<std::endl;
+               <<nThreadsTot*npg<<std::endl;
       std::cout<<"   Required Number of calls ="<<std::setw(12)
                <<nCubeNpg<<" ( "<<std::setw(6)<<std::setprecision(2)
-               <<100.*(double)nCubeNpg/(double)nThreadsTot<<"%)"<<std::endl;
+               <<100.*(double)nCubeNpg/(double)(nThreadsTot*npg)<<"%)"<<std::endl;
       std::cout<<std::endl;
    }
 
-   // allocate Fval, this will contain the values of f for every point evaluated.
-   int sizeFval = nCubeNpg*sizeof(float);
-//   std::cout<<"sizeFval = "<<sizeFval<<std::endl;
-
-   // CPU and equal to zero
-   float* hFval;
-   checkCudaErrors(cudaMallocHost((void**)&hFval, sizeFval));
-   memset(hFval, '\0', sizeFval);
-
-   // GPU
-   float* gFval;
-   checkCudaErrors(cudaMalloc((void**)&gFval, sizeFval));
-
-   // allocate IAval, this contains information for the adaption phase.
-   //   int sizeIAval = nCubeNpg*ndim*sizeof(unsigned short);
-   int sizeIAval = nCubeNpg*ndim*sizeof(int);
-//   std::cout<<"sizeIAval = "<<sizeIAval<<std::endl;
-
-   // CPU
-   //unsigned short* hIAval;
-   int* hIAval;
-   checkCudaErrors(cudaMallocHost((void**)&hIAval, sizeIAval));
-   //unsigned short* hIAval =
-   //  (unsigned short*)calloc(nCubeNpg*ndim, sizeof(unsigned short));
-   memset(hIAval, '\0', sizeIAval);
-
-   // GPU
-   // unsigned short* gIAval;
-   int* gIAval;
-   checkCudaErrors(cudaMalloc((void**)&gIAval, sizeIAval));
-
-   double startVegasCall, endVegasCall;
-   double startVegasMove, endVegasMove;
-   double startVegasFill, endVegasFill;
+   //By using the new GPU kernel we eliminate the need to move big stuff from
+   //GPU to CPU and the need to run the Fill part.
+   double startVegasCallAndFill, endVegasCallAndFill;
    double startVegasRefine, endVegasRefine;
 
    do {
@@ -247,95 +217,27 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       it++;
 
 //      std::cout<<"call gVegasCallFunc: it = "<<it<<std::endl;
-      startVegasCall = omp_get_wtime();
+      startVegasCallAndFill = omp_get_wtime();
+      initzero<<<1, 1>>>();
+      getLastCudaError("initzero error");
       //Now CallFilla will need a number of threads equal to the amount of cubes!
-      myVegasCallFilla<<<BkGd, ThBk>>>(gFval, gIAval);
-      getLastCudaError("gVegasCallFunc error");
-      cudaThreadSynchronize(); // wait for synchronize
-      endVegasCall = omp_get_wtime();
-      timeVegasCall += endVegasCall-startVegasCall;
+      myVegasCallFilla<<<BkGd, ThBk>>>(mds);
+      getLastCudaError("myVegasCallFilla error");
+      cudaDeviceSynchronize(); // wait for synchronize
+      checkCudaErrors(cudaMemcpyFromSymbol(&ti, dti, sizeof(float)));
+      std::cout<<"     ti ="<<std::setw(12)
+               <<ti<<std::endl;
+      checkCudaErrors(cudaMemcpyFromSymbol(&tsi, dtsi, sizeof(float)));
+      std::cout<<"     tsi ="<<std::setw(12)
+               <<tsi<<std::endl;
+      checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, ndim_max*nd_max*sizeof(float)));
 
-      startVegasMove = omp_get_wtime();
-      //Moving function values to the CPU, I think this can be avoided.
-      checkCudaErrors(cudaMemcpy(hFval, gFval,  sizeFval,
-                               cudaMemcpyDeviceToHost));
-      //Moving grid attributes to the CPU, this may be more difficult...
-      checkCudaErrors(cudaMemcpy(hIAval, gIAval,  sizeIAval,
-                               cudaMemcpyDeviceToHost));
-      endVegasMove = omp_get_wtime();
-      timeVegasMove += endVegasMove-startVegasMove;
-
-// *****************
-
-      startVegasFill = omp_get_wtime();
-      //Start reduction of the values.
-      ti = 0.;
-      tsi = 0.;
-
-      double d[ndim_max][nd_max];
-
-      for (int j=0;j<ndim;++j) {
-         for (int i=0;i<nd;++i) {
-            d[j][i] = 0.;
-         }
-      }
-
-      for (unsigned ig=0;ig<nCubes;ig++) {
-         double fb = 0.;
-         double f2b = 0.;
-         for (int ipg=0;ipg<npg;ipg++) {
-            int idx = npg*ig+ipg;
-            double f = (double)hFval[idx];
-//            std::cout<<"idx,f = "<<idx<<", "<<std::scientific
-//                     <<std::setw(10)<<std::setprecision(5)<<f<<std::endl;
-            double f2 = f*f;
-            fb += f;
-            f2b += f2;
-            /*
-            for (int idim=0;idim<ndim;idim++) {
-               int iaj = hIAval[idim*nCubeNpg+idx];
-               d[idim][iaj] += f2;
-            }
-            */
-         }
-         f2b = sqrt(f2b*npg);
-         f2b = (f2b-fb)*(f2b+fb);
-         ti += fb;
-         tsi += f2b;
-         if (mds<0) {
-            for (int idim=0;idim<ndim;idim++) {
-               int idx = npg*ig;
-               int iaj = hIAval[idim*nCubeNpg+idx];
-               d[idim][iaj] += f2b;
-            }
-         }
-      }
-
-//      std::cout<<"mds = "<<mds<<std::endl;
-      if (mds>0) {
-         //         std::cout<<"ndim = "<<ndim<<std::endl;
-         for (int idim=0;idim<ndim;idim++) {
-            //            std::cout<<"idim = "<<idim<<std::endl;
-            for (int idx=0;idx<nCubeNpg;idx++) {
-               //               std::cout<<"idx = "<<idx<<std::endl;
-               int iaj = hIAval[idim*nCubeNpg+idx];
-               //               std::cout<<"iaj = "<<iaj<<std::endl;
-               double f = (double)hFval[idx];
-               //               std::cout<<"f = "<<f<<std::endl;
-               double f2 = f*f;
-               d[idim][iaj] += f2;
-                //            std::cout<<"idim, iaj, idx, f = "<<idim<<", "<<iaj
-                //                       <<", "<<idx<<", "<<f<<std::endl;
-            }
-         }
-      }
-
-      endVegasFill = omp_get_wtime();
-      timeVegasFill += endVegasFill-startVegasFill;
+      endVegasCallAndFill = omp_get_wtime();
+      timeVegasCallAndFill += endVegasCallAndFill-startVegasCallAndFill;
 
       tsi *= dv2g;
-      double ti2 = ti*ti;
-      double wgt = ti2/tsi;
+      float ti2 = ti*ti;
+      float wgt = ti2/tsi;
       si += ti*wgt;
       si2 += ti2;
       swgt += wgt;
@@ -343,7 +245,7 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       avgi = si/swgt;
       sd = swgt*it/si2;
       chi2a = 0.;
-      if (it>1) chi2a = sd*(schi/swgt-avgi*avgi)/((double)it-1.);
+      if (it>1) chi2a = sd*(schi/swgt-avgi*avgi)/((float)it-1.);
       sd = sqrt(1./sd);
 
       if (nprn!=0) {
@@ -368,12 +270,12 @@ void myVegas(double& avgi, double& sd, double& chi2a)
                std::cout<<"    x    delt i   convce"<<std::endl;
 
                for (int i=0;i<nd;i+=3) {
-                  std::cout<<std::setw(6)<<std::setprecision(2)<<std::setfill(' ')
-                           <<xi[j][i]<<" "<<d[j][i]<<" "<<d[j][i];
-                  std::cout<<std::setw(6)<<std::setprecision(2)
-                           <<xi[j][i+1]<<" "<<d[j][i+1]<<" "<<d[j][i+1];
-                  std::cout<<std::setw(6)<<std::setprecision(2)
-                           <<xi[j][i+2]<<" "<<d[j][i+2]<<" "<<d[j][i+2]
+                  std::cout<<std::setw(6)<<std::setprecision(4)<<std::setfill(' ')
+                           <<xi[j][i]<<" "<<hd[j][i]<<" "<<hd[j][i];
+                  std::cout<<std::setw(6)<<std::setprecision(4)
+                           <<xi[j][i+1]<<" "<<hd[j][i+1]<<" "<<hd[j][i+1];
+                  std::cout<<std::setw(6)<<std::setprecision(4)
+                           <<xi[j][i+2]<<" "<<hd[j][i+2]<<" "<<hd[j][i+2]
                            <<std::endl;
                            }
 
@@ -397,27 +299,27 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       double r[nd_max];
       double dt[ndim_max];
       for (int j=0;j<ndim;j++) {
-         double xo = d[j][0];
-         double xn = d[j][1];
-         d[j][0] = 0.5*(xo+xn);
-         dt[j] = d[j][0];
+         double xo = hd[j][0];
+         double xn = hd[j][1];
+         hd[j][0] = 0.5*(xo+xn);
+         dt[j] = hd[j][0];
          for (int i=1;i<nd-1;i++) {
-            d[j][i] = xo+xn;
+            hd[j][i] = xo+xn;
             xo = xn;
-            xn = d[j][i+1];
-            d[j][i] = (d[j][i]+xn)/3.;
-            dt[j] += d[j][i];
+            xn = hd[j][i+1];
+            hd[j][i] = (hd[j][i]+xn)/3.;
+            dt[j] += hd[j][i];
          }
-         d[j][nd-1] = 0.5*(xn+xo);
-         dt[j] += d[j][nd-1];
+         hd[j][nd-1] = 0.5*(xn+xo);
+         dt[j] += hd[j][nd-1];
       }
 
       for (int j=0;j<ndim;j++) {
          double rc = 0.;
          for (int i=0;i<nd;i++) {
             r[i] = 0.;
-            if (d[j][i]>0.) {
-               double xo = dt[j]/d[j][i];
+            if (hd[j][i]>0.) {
+               double xo = dt[j]/hd[j][i];
                if (!isinf(xo))
                   r[i] = pow(((xo-1.)/xo/log(xo)),alph);
             }
@@ -464,13 +366,4 @@ void myVegas(double& avgi, double& sd, double& chi2a)
 
    } while (it<itmx && acc*fabs(avgi)<sd);
 
-
-   checkCudaErrors(cudaFreeHost(hFval));
-   checkCudaErrors(cudaFree(gFval));
-
-   checkCudaErrors(cudaFreeHost(hIAval));
-//   free(hIAval);
-   checkCudaErrors(cudaFree(gIAval));
-
-   //   std::cout<<"ng = "<<ng<<std::endl;
 }
