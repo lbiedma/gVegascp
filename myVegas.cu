@@ -248,7 +248,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
 
 //      std::cout<<"call gVegasCallFunc: it = "<<it<<std::endl;
       startVegasCall = omp_get_wtime();
-      gVegasCallFunc<<<BkGd, ThBk>>>(gFval, gIAval);
+      //Now CallFilla will need a number of threads equal to the amount of cubes!
+      myVegasCallFilla<<<BkGd, ThBk>>>(gFval, gIAval);
       getLastCudaError("gVegasCallFunc error");
       cudaThreadSynchronize(); // wait for synchronize
       endVegasCall = omp_get_wtime();
