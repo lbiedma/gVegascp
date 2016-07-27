@@ -88,6 +88,7 @@ void myVegasCallFilla(int mds)
         }
 
         float f = wgt * func(x,wgt);
+        __syncthreads();
         fb += f;
         float f2 = f*f;
         f2b += f2;
@@ -108,7 +109,6 @@ void myVegasCallFilla(int mds)
         for (int idim = 0; idim < g_ndim; idim++)
         atomicAdd(&d[idim][ia[idim]], f2b);
       }
-      __syncthreads();
       //REDUCE TIME!!!
 
       for (int offset = warpSize/2; offset < 0; offset /= 2){

@@ -225,11 +225,7 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       getLastCudaError("myVegasCallFilla error");
       cudaDeviceSynchronize(); // wait for synchronize
       checkCudaErrors(cudaMemcpyFromSymbol(&ti, dti, sizeof(float)));
-      std::cout<<"     ti ="<<std::setw(12)
-               <<ti<<std::endl;
       checkCudaErrors(cudaMemcpyFromSymbol(&tsi, dtsi, sizeof(float)));
-      std::cout<<"     tsi ="<<std::setw(12)
-               <<tsi<<std::endl;
       checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, ndim_max*nd_max*sizeof(float)));
 
       endVegasCallAndFill = omp_get_wtime();
