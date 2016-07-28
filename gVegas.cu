@@ -27,7 +27,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
    ng = 1;
 
    npg = 0;
-   std::cout<<"mds = "<<mds<<std::endl;
+   //std::cout<<"mds = "<<mds<<std::endl;
    if (mds!=0) {
 
       std::cout<<"ncall, ndim = "<<ncall<<", "<<ndim<<std::endl;

@@ -7,13 +7,11 @@ __device__ float dti;
 
 __global__
 void initzero(void){
-  for (int dim = 0; dim < ndim_max; dim++){
-    for (int box = 0; box < nd_max; box ++){
+  for (int dim = 0; dim < g_ndim; dim++){
+    for (int box = 0; box < g_nd; box++){
       d[dim][box] = 0.0f;
     }
   }
-  dti = 0.0f;
-  dtsi = 0.0f;
 }
 
 __global__
@@ -38,7 +36,7 @@ void myVegasCallFilla(int mds)
    __shared__ float block_f2b;
 
    //int ig = tid;
-   int lane = tid % warpSize;
+   int lane = tIdx % warpSize;
    //d[tid] = 0.0;
    int kg[ndim_max];
    unsigned ia[ndim_max];
@@ -46,8 +44,11 @@ void myVegasCallFilla(int mds)
    //will be reduced later and stored in dti and dtsi.
    block_fb = 0.0f;
    block_f2b = 0.0f;
+   float f, f2;
    float fb = 0.0f;
    float f2b = 0.0f;
+   dti = 0.0f;
+   dtsi = 0.0f;
 
    if (tid<g_nCubes) {
 
@@ -87,10 +88,9 @@ void myVegasCallFilla(int mds)
           wgt *= xo*(float)g_nd;
         }
 
-        float f = wgt * func(x,wgt);
-        __syncthreads();
+        f = wgt * func(x,wgt);
         fb += f;
-        float f2 = f*f;
+        f2 = f*f;
         f2b += f2;
         //If mds = 1, we just have to add f^2 to the corresponding space in d.
         if (mds > 0){
@@ -110,7 +110,7 @@ void myVegasCallFilla(int mds)
         atomicAdd(&d[idim][ia[idim]], f2b);
       }
       //REDUCE TIME!!!
-
+      #pragma unroll
       for (int offset = warpSize/2; offset < 0; offset /= 2){
         fb += __shfl_down(fb, offset);
         f2b += __shfl_down(f2b, offset);
@@ -123,7 +123,7 @@ void myVegasCallFilla(int mds)
 
 		  __syncthreads();
 
-      if (0 == tid){
+      if (0 == tIdx){
         atomicAdd(&dti, block_fb);
         atomicAdd(&dtsi, block_f2b);
       }

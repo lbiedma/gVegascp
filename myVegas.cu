@@ -226,7 +226,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       cudaDeviceSynchronize(); // wait for synchronize
       checkCudaErrors(cudaMemcpyFromSymbol(&ti, dti, sizeof(float)));
       checkCudaErrors(cudaMemcpyFromSymbol(&tsi, dtsi, sizeof(float)));
-      checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, ndim_max*nd_max*sizeof(float)));
+      checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, sizeof(d)));
+      //checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, ndim_max*nd_max*sizeof(float)));
 
       endVegasCallAndFill = omp_get_wtime();
       timeVegasCallAndFill += endVegasCallAndFill-startVegasCallAndFill;
