@@ -12,6 +12,8 @@ void initzero(void){
       d[dim][box] = 0.0f;
     }
   }
+  dti = 0.0f;
+  dtsi = 0.0f;
 }
 
 __global__
@@ -34,6 +36,8 @@ void myVegasCallFilla(int mds)
    //Using float for now, atomicAdd doesn't support double yet...
    __shared__ float block_fb;
    __shared__ float block_f2b;
+   block_fb = 0.0f;
+   block_f2b = 0.0f;
 
    //int ig = tid;
    int lane = tIdx % warpSize;
@@ -42,13 +46,9 @@ void myVegasCallFilla(int mds)
    unsigned ia[ndim_max];
    //fb and f2b will be the accumulations of f and the "error", these values
    //will be reduced later and stored in dti and dtsi.
-   block_fb = 0.0f;
-   block_f2b = 0.0f;
    float f, f2;
    float fb = 0.0f;
    float f2b = 0.0f;
-   dti = 0.0f;
-   dtsi = 0.0f;
 
    if (tid<g_nCubes) {
 
@@ -110,10 +110,11 @@ void myVegasCallFilla(int mds)
           atomicAdd(&d[idim][ia[idim]], f2b);
         }
       }
-      
+      __syncthreads();
+
       //REDUCE TIME!!!
       #pragma unroll
-      for (int offset = warpSize/2; offset < 0; offset /= 2){
+      for (int offset = warpSize/2; offset > 0; offset /= 2){
         fb += __shfl_down(fb, offset);
         f2b += __shfl_down(f2b, offset);
       }
