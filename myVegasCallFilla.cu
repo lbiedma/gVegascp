@@ -106,9 +106,11 @@ void myVegasCallFilla(int mds)
       f2b = sqrt(f2b * g_npg);
       f2b = (f2b - fb) * (f2b - fb);
       if (mds < 0){
-        for (int idim = 0; idim < g_ndim; idim++)
-        atomicAdd(&d[idim][ia[idim]], f2b);
+        for (int idim = 0; idim < g_ndim; idim++){
+          atomicAdd(&d[idim][ia[idim]], f2b);
+        }
       }
+      
       //REDUCE TIME!!!
       #pragma unroll
       for (int offset = warpSize/2; offset < 0; offset /= 2){

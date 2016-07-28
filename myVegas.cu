@@ -85,8 +85,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
    }
 
    dxg = 1.f/(float)ng;
-   float dnpg = (float)npg;
-   float dv2g = calls*calls*pow(dxg,ndim)*pow(dxg,ndim)/(dnpg*dnpg*(dnpg-1.));
+   double dnpg = (double)npg;
+   double dv2g = calls*calls*pow(dxg,ndim)*pow(dxg,ndim)/(dnpg*dnpg*(dnpg-1.));
    xnd = (float)nd;
    dxg *= xnd;
    xjac = 1.f/(float)calls;
@@ -223,9 +223,9 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       //Now CallFilla will need a number of threads equal to the amount of cubes!
       myVegasCallFilla<<<BkGd, ThBk>>>(mds);
       getLastCudaError("myVegasCallFilla error");
-      cudaDeviceSynchronize(); // wait for synchronize
-      checkCudaErrors(cudaMemcpyFromSymbol(&ti, dti, sizeof(float)));
-      checkCudaErrors(cudaMemcpyFromSymbol(&tsi, dtsi, sizeof(float)));
+      cudaThreadSynchronize(); // wait for synchronize
+      checkCudaErrors(cudaMemcpyFromSymbol(&ti, dti, sizeof(dti)));
+      checkCudaErrors(cudaMemcpyFromSymbol(&tsi, dtsi, sizeof(dtsi)));
       checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, sizeof(d)));
       //checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, ndim_max*nd_max*sizeof(float)));
 
@@ -233,8 +233,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       timeVegasCallAndFill += endVegasCallAndFill-startVegasCallAndFill;
 
       tsi *= dv2g;
-      float ti2 = ti*ti;
-      float wgt = ti2/tsi;
+      double ti2 = (double)ti*(double)ti;
+      double wgt = ti2/(double)tsi;
       si += ti*wgt;
       si2 += ti2;
       swgt += wgt;
@@ -242,7 +242,7 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       avgi = si/swgt;
       sd = swgt*it/si2;
       chi2a = 0.;
-      if (it>1) chi2a = sd*(schi/swgt-avgi*avgi)/((float)it-1.);
+      if (it>1) chi2a = sd*(schi/swgt-avgi*avgi)/((double)it-1.);
       sd = sqrt(1./sd);
 
       if (nprn!=0) {
