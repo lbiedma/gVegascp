@@ -224,8 +224,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       myVegasCallFilla<<<BkGd, ThBk>>>(mds);
       getLastCudaError("myVegasCallFilla error");
       cudaThreadSynchronize(); // wait for synchronize
-      checkCudaErrors(cudaMemcpyFromSymbol(&ti, dti, sizeof(dti)));
-      checkCudaErrors(cudaMemcpyFromSymbol(&tsi, dtsi, sizeof(dtsi)));
+      checkCudaErrors(cudaMemcpyFromSymbol(&ti, doubleti, sizeof(double)));
+      checkCudaErrors(cudaMemcpyFromSymbol(&tsi, doubletsi, sizeof(double)));
       checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, sizeof(d)));
       //checkCudaErrors(cudaMemcpyFromSymbol(&hd, d, ndim_max*nd_max*sizeof(float)));
 
@@ -233,8 +233,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       timeVegasCallAndFill += endVegasCallAndFill-startVegasCallAndFill;
 
       tsi *= dv2g;
-      double ti2 = (double)ti*(double)ti;
-      double wgt = ti2/(double)tsi;
+      double ti2 = ti*ti;
+      double wgt = ti2/tsi;
       si += ti*wgt;
       si2 += ti2;
       swgt += wgt;

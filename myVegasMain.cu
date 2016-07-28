@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
    ndim = ndim0;
 
    assert(ndim <= ndim_max);
-   //cutilSafeCallNoSync(cudaSetDevice(0));
+   //checkCudaErrorsNoSync(cudaSetDevice(0));
 
    mds = 1;
 
@@ -118,9 +118,7 @@ int main(int argc, char* argv[])
 
    //Print running times!
    std::cout<<"#==========================="<<std::endl;
-   std::cout<<"# Function call time per iteration: " <<timeVegasCall/(double)it<<std::endl;
-   std::cout<<"# Values moving time per iteration: " <<timeVegasMove/(double)it<<std::endl;
-   std::cout<<"# Filling (reduce) time per iteration: " <<timeVegasFill/(double)it<<std::endl;
+   std::cout<<"# Function call time per iteration: " <<timeVegasCallAndFill/(double)it<<std::endl;
    std::cout<<"# Refining time per iteration: " <<timeVegasRefine/(double)it<<std::endl;
    std::cout<<"#==========================="<<std::endl;
 

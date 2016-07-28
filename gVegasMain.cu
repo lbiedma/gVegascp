@@ -4,7 +4,6 @@
 #include <ctime>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <assert.h>
 
 // includes, project
 #include "helper_cuda.h"
@@ -17,7 +16,7 @@
 
 #include "kernels.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char** argv)
 {
 
    //------------------
@@ -25,20 +24,21 @@ int main(int argc, char* argv[])
    //------------------
    //
    // program interface:
-   //   program -n "ncall0" -i "itmx0" -a "nacc" -b "nBlockSize0" -d "ndim0"
+   //   program -n="ncall0" -i="itmx0" -a="nacc" -b="nBlockSize0"
    //
    // parameters:
-   //   ncall = 1024*ncall0 is the amount of function calls
-   //   itmx  = itmx0 is the maximum iterations for the algorithm
-   //   acc   = nacc*0.00001f is the desired accuracy
-   //   nBlockSize = nBlockSize0 is the size of the CUDA block
-   //   ndim = ndim0 is the dimension of the integration space
+   //   ncall = 1024*ncall0
+   //   itmx  = itmx0
+   //   acc   = nacc*0.00001f
+   //   nBlockSize = nBlockSize0
+   //
 
    int ncall0 = 256;
-   int itmx0 = 20;
-   int nacc  = 10;
+   int itmx0 = 10;
+   int nacc  = 1;
    int nBlockSize0 = 256;
    int ndim0 = 6;
+
    int c;
 
    while ((c = getopt (argc, argv, "n:i:a:b:d:")) != -1)
@@ -73,21 +73,18 @@ int main(int argc, char* argv[])
 
    ncall = ncall0*1024;
    itmx = itmx0;
-   acc = (float)nacc*0.000001f;
+   acc = (float)nacc*0.00001f;
    nBlockSize = nBlockSize0;
    ndim = ndim0;
-
-   assert(ndim <= ndim_max);
-   //cutilSafeCallNoSync(cudaSetDevice(0));
 
    mds = 1;
 
    ng = 0;
    npg = 0;
 
-   for (int i=0;i<ndim;i++) { //Choose the box where to integrate
-      xl[i] = -1.; //lower bound
-      xu[i] = 1.; //upper bound
+   for (int i=0;i<ndim;i++) {
+      xl[i] = -1.;
+      xu[i] = 1.;
    }
 
    nprn = 1;
@@ -97,8 +94,7 @@ int main(int argc, char* argv[])
    double sd = 0.;
    double chi2a = 0.;
 
-   //gVegas(avgi, sd, chi2a);
-   myVegas(avgi, sd, chi2a);
+   gVegas(avgi, sd, chi2a);
 
    //-------------------------
    //  Print out information
@@ -116,6 +112,8 @@ int main(int argc, char* argv[])
    std::cout<<"# Chisquare                : "<<chi2a<<std::endl;
    std::cout<<"#==========================="<<std::endl;
 
+   cudaThreadExit();
+
    //Print running times!
    std::cout<<"#==========================="<<std::endl;
    std::cout<<"# Function call time per iteration: " <<timeVegasCall/(double)it<<std::endl;
@@ -123,8 +121,6 @@ int main(int argc, char* argv[])
    std::cout<<"# Filling (reduce) time per iteration: " <<timeVegasFill/(double)it<<std::endl;
    std::cout<<"# Refining time per iteration: " <<timeVegasRefine/(double)it<<std::endl;
    std::cout<<"#==========================="<<std::endl;
-
-   //cudaThreadExit();
 
    return 0;
 }

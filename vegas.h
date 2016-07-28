@@ -1,7 +1,7 @@
 #ifndef VEGAS_H
 #define VEGAS_H
 
-//void gVegas(float& avgi, float& sd, float& chi2a);
+void gVegas(float& avgi, float& sd, float& chi2a);
 void myVegas(float& avgi, float& sd, float& chi2a);
 
 #ifndef __MAIN_LOGIC
@@ -30,8 +30,8 @@ EXTERN int ndo, it;
 //EXTERN double alph;
 EXTERN int mds;
 
-EXTERN double calls;
-EXTERN float ti, tsi;
+EXTERN double calls, ti, tsi;
+//EXTERN float ti, tsi;
 
 EXTERN int npg, ng, nd;
 EXTERN float dxg, xnd;

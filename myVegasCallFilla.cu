@@ -2,8 +2,8 @@
 #include "vegas.h"
 
 __device__ float d[ndim_max][nd_max];
-__device__ float dtsi;
-__device__ float dti;
+__device__ float dti, dtsi;
+__device__ double doubleti, doubletsi;
 
 __global__
 void initzero(void){
@@ -132,4 +132,6 @@ void myVegasCallFilla(int mds)
       }
     }
 
+    doubleti = (double)dti;
+    doubletsi = (double)dtsi;
 }

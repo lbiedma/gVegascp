@@ -4,8 +4,8 @@
 #include "xorshift.cu"
 
 #include "gVegasFunc.cu"
-//#include "gVegasCallFunc.cu"
+#include "gVegasCallFunc.cu"
 #include "myVegasCallFilla.cu"
-//#include "gVegas.cu"
+#include "gVegas.cu"
 #include "myVegas.cu"
 #endif

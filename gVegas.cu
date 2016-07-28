@@ -27,7 +27,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
    ng = 1;
 
    npg = 0;
-   //std::cout<<"mds = "<<mds<<std::endl;
+   std::cout<<"mds = "<<mds<<std::endl;
    if (mds!=0) {
 
       std::cout<<"ncall, ndim = "<<ncall<<", "<<ndim<<std::endl;
@@ -42,7 +42,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
       }
 
    }
-   //std::cout<<"ng = "<<ng<<std::endl;
+   std::cout<<"ng = "<<ng<<std::endl;
    checkCudaErrors(cudaMemcpyToSymbol(g_ndim, &ndim, sizeof(int)));
    checkCudaErrors(cudaMemcpyToSymbol(g_ng,   &ng,   sizeof(int)));
    checkCudaErrors(cudaMemcpyToSymbol(g_nd,   &nd,   sizeof(int)));
@@ -163,19 +163,18 @@ void gVegas(double& avgi, double& sd, double& chi2a)
 
    //   std::cout<<"nBlockSize = "<<nBlockSize<<std::endl;
    //--------------------------
-   //  Set up kernel variables
+   //  Set up kernel vaiables
    //--------------------------
-   const int nGridSizeMax =  65535; //Maximum size of grid in X for Fermi.
-   //const int nGridSizeMax = 1<<31 - 1; This should be the one for current architectures.
+   const int nGridSizeMax =  65535;
 
    dim3 ThBk(nBlockSize);
 
    int nGridSizeX, nGridSizeY;
    int nBlockTot = (nCubeNpg-1)/nBlockSize+1;
-   std::cout<<"nBlockTot = "<<nBlockTot<<std::endl;
+//   std::cout<<"nBlockTot = "<<nBlockTot<<std::endl;
    nGridSizeY = (nBlockTot-1)/nGridSizeMax+1;
    nGridSizeX = (nBlockTot-1)/nGridSizeY+1;
-   std::cout<<"nGridSize (x,y) = "<<nGridSizeX<<", "<<nGridSizeY<<std::endl;
+//   std::cout<<"nGridSize (x,y) = "<<nGridSizeX<<", "<<nGridSizeY<<std::endl;
    dim3 BkGd(nGridSizeX, nGridSizeY);
 
    if (nprn!=0) {
@@ -193,11 +192,11 @@ void gVegas(double& avgi, double& sd, double& chi2a)
       std::cout<<std::endl;
    }
 
-   // allocate Fval, this will contain the values of f for every point evaluated.
+   // allocate Fval
    int sizeFval = nCubeNpg*sizeof(float);
 //   std::cout<<"sizeFval = "<<sizeFval<<std::endl;
 
-   // CPU and equal to zero
+   // CPU
    float* hFval;
    checkCudaErrors(cudaMallocHost((void**)&hFval, sizeFval));
    memset(hFval, '\0', sizeFval);
@@ -236,16 +235,14 @@ void gVegas(double& avgi, double& sd, double& chi2a)
 //      std::cout<<"call gVegasCallFunc: it = "<<it<<std::endl;
       startVegasCall = omp_get_wtime();
       gVegasCallFunc<<<BkGd, ThBk>>>(gFval, gIAval);
-      getLastCudaError("gVegasCallFunc error");
       cudaThreadSynchronize(); // wait for synchronize
       endVegasCall = omp_get_wtime();
       timeVegasCall += endVegasCall-startVegasCall;
 
       startVegasMove = omp_get_wtime();
-      //Moving function values to the CPU, I think this can be avoided.
       checkCudaErrors(cudaMemcpy(hFval, gFval,  sizeFval,
                                cudaMemcpyDeviceToHost));
-      //Moving grid attributes to the CPU, this may be more difficult...
+
       checkCudaErrors(cudaMemcpy(hIAval, gIAval,  sizeIAval,
                                cudaMemcpyDeviceToHost));
       endVegasMove = omp_get_wtime();
@@ -254,7 +251,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
 // *****************
 
       startVegasFill = omp_get_wtime();
-      //Start reduction of the values.
+
       ti = 0.;
       tsi = 0.;
 
