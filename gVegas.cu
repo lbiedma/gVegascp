@@ -263,7 +263,6 @@ void gVegas(double& avgi, double& sd, double& chi2a)
          }
       }
       int maxthreads = omp_get_max_threads();
-      //printf("maxthreads = %d\n", maxthreads);
       int i, idx, ipg, iaj, idim, pieces;
       double f, f2, f2b, fb;
       unsigned ig;
@@ -271,6 +270,9 @@ void gVegas(double& avgi, double& sd, double& chi2a)
     {
       pieces = (nCubes + maxthreads - 1) / maxthreads;
       i = omp_get_thread_num();
+
+      double d_priv[ndim_max][nd_max] = {0.};
+
       for (ig=i*pieces;ig<(i+1)*pieces;ig++) {
         if (ig < nCubes){
           fb = 0.;
@@ -298,15 +300,14 @@ void gVegas(double& avgi, double& sd, double& chi2a)
             for (idim=0;idim<ndim;idim++) {
                idx = npg*ig;
                iaj = hIAval[idim*nCubeNpg+idx];
-               #pragma omp atomic
-               d[idim][iaj] += f2b;
+               //#pragma omp atomic
+               d_priv[idim][iaj] += f2b;
             }
           }
         }
       }
 
 
-//      std::cout<<"mds = "<<mds<<std::endl;
       if (mds>0) {
         int mdspieces = (nCubeNpg + maxthreads - 1) / maxthreads;
          //         std::cout<<"ndim = "<<ndim<<std::endl;
@@ -323,8 +324,8 @@ void gVegas(double& avgi, double& sd, double& chi2a)
                f = (double)hFval[idx];
                //               std::cout<<"f = "<<f<<std::endl;
                f2 = f*f;
-               #pragma omp atomic
-               d[idim][iaj] += f2;
+               //#pragma omp atomic
+               d_priv[idim][iaj] += f2;
                //               std::cout<<"idim, iaj, idx, f = "<<idim<<", "<<iaj
                //                        <<", "<<idx<<", "<<f<<std::endl;
               }
@@ -332,6 +333,16 @@ void gVegas(double& avgi, double& sd, double& chi2a)
           //}
         }
       }
+
+      #pragma omp critical
+      {
+        for (int h = 0; h < ndim; h++){
+          for (int j = 0; j < nd; j++){
+            d[h][j] += d_priv[h][j];
+          }
+        }
+      }
+
     }
 
       endVegasFill = omp_get_wtime();
