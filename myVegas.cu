@@ -233,8 +233,8 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       timeVegasCallAndFill += endVegasCallAndFill-startVegasCallAndFill;
 
       tsi *= dv2g;
-      double ti2 = ti*ti;
-      double wgt = ti2/tsi;
+      double ti2 = (double)ti*(double)ti;
+      double wgt = ti2/(double)tsi;
       si += ti*wgt;
       si2 += ti2;
       swgt += wgt;

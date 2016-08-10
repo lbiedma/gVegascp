@@ -27,7 +27,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
    ng = 1;
 
    npg = 0;
-   std::cout<<"mds = "<<mds<<std::endl;
+   //std::cout<<"mds = "<<mds<<std::endl;
    if (mds!=0) {
 
       std::cout<<"ncall, ndim = "<<ncall<<", "<<ndim<<std::endl;
@@ -42,7 +42,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
       }
 
    }
-   std::cout<<"ng = "<<ng<<std::endl;
+   //std::cout<<"ng = "<<ng<<std::endl;
    checkCudaErrors(cudaMemcpyToSymbol(g_ndim, &ndim, sizeof(int)));
    checkCudaErrors(cudaMemcpyToSymbol(g_ng,   &ng,   sizeof(int)));
    checkCudaErrors(cudaMemcpyToSymbol(g_nd,   &nd,   sizeof(int)));
@@ -262,19 +262,25 @@ void gVegas(double& avgi, double& sd, double& chi2a)
             d[j][i] = 0.;
          }
       }
-
-    #pragma omp parallel private(ig, f, f2 fb, f2b, ipg, d, ti, tsi) reduction (+:d, ti, tsi)
+      int maxthreads = omp_get_max_threads();
+      //printf("maxthreads = %d\n", maxthreads);
+      int i, idx, ipg, iaj, idim, pieces;
+      double f, f2, f2b, fb;
+      unsigned ig;
+    #pragma omp parallel default(shared) private(iaj, idim, ig, f, f2, fb, f2b, ipg, i, idx) reduction (+:ti, tsi)
     {
-      #pragma omp parallel for
-      for (unsigned ig=0;ig<nCubes;ig++) {
-         double fb = 0.;
-         double f2b = 0.;
-         for (int ipg=0;ipg<npg;ipg++) {
-            int idx = npg*ig+ipg;
-            double f = (double)hFval[idx];
+      pieces = (nCubes + maxthreads - 1) / maxthreads;
+      i = omp_get_thread_num();
+      for (ig=i*pieces;ig<(i+1)*pieces;ig++) {
+        if (ig < nCubes){
+          fb = 0.;
+          f2b = 0.;
+         for (ipg=0;ipg<npg;ipg++) {
+            idx = npg*ig+ipg;
+            f = (double)hFval[idx];
             //std::cout<<"idx,f = "<<idx<<", "<<std::scientific
             //<<std::setw(10)<<std::setprecision(5)<<f<<std::endl;
-            double f2 = f*f;
+            f2 = f*f;
             fb += f;
             f2b += f2;
             /*
@@ -283,47 +289,50 @@ void gVegas(double& avgi, double& sd, double& chi2a)
                d[idim][iaj] += f2;
             }
             */
-         }
+          }
          f2b = sqrt(f2b*npg);
          f2b = (f2b-fb)*(f2b+fb);
          ti += fb;
          tsi += f2b;
          if (mds<0) {
-            for (int idim=0;idim<ndim;idim++) {
-               int idx = npg*ig;
-               int iaj = hIAval[idim*nCubeNpg+idx];
+            for (idim=0;idim<ndim;idim++) {
+               idx = npg*ig;
+               iaj = hIAval[idim*nCubeNpg+idx];
+               #pragma omp atomic
                d[idim][iaj] += f2b;
             }
-         }
+          }
+        }
       }
-    }
+    //}
 
 //      std::cout<<"mds = "<<mds<<std::endl;
       if (mds>0) {
+        pieces = (nCubeNpg + maxthreads - 1) / maxthreads;
          //         std::cout<<"ndim = "<<ndim<<std::endl;
-       for (int idim=0;idim<ndim;idim++) {
+       for (idim=0;idim<ndim;idim++) {
           //            std::cout<<"idim = "<<idim<<std::endl;
-          #pragma omp parallel private(i, idx, iaj, f, f2, d) reduction (+:d)
-          {
-            int maxthreads = omp_get_max_threads();
-            i = omp_get_thread_num();
-            pieces = (nCubeNpg + maxthreads - 1) / maxthreads;
-            for (int idx=i*pieces; idx<(i+1)*pieces; idx++) {
+          //#pragma omp parallel private(i, idx, iaj, f, f2) reduction (+:d)
+          //{
+            //i = omp_get_thread_num();
+            for (idx=i*pieces; idx<(i+1)*pieces; idx++) {
                //               std::cout<<"idx = "<<idx<<std::endl;
               if (idx < nCubeNpg){
-               int iaj = hIAval[idim*nCubeNpg+idx];
+               iaj = hIAval[idim*nCubeNpg+idx];
                //               std::cout<<"iaj = "<<iaj<<std::endl;
-               double f = (double)hFval[idx];
+               f = (double)hFval[idx];
                //               std::cout<<"f = "<<f<<std::endl;
-               double f2 = f*f;
+               f2 = f*f;
+               #pragma omp atomic
                d[idim][iaj] += f2;
                //               std::cout<<"idim, iaj, idx, f = "<<idim<<", "<<iaj
                //                        <<", "<<idx<<", "<<f<<std::endl;
               }
             }
-          }
+          //}
         }
       }
+    }
 
       endVegasFill = omp_get_wtime();
       timeVegasFill += endVegasFill-startVegasFill;

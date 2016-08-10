@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
    //   ndim = ndim0 is the dimension of the integration space
 
    int ncall0 = 256;
-   int itmx0 = 20;
-   int nacc  = 10;
+   int itmx0 = 10;
+   int nacc  = 1;
    int nBlockSize0 = 256;
    int ndim0 = 6;
    int c;
@@ -78,7 +78,6 @@ int main(int argc, char* argv[])
    ndim = ndim0;
 
    assert(ndim <= ndim_max);
-   //checkCudaErrorsNoSync(cudaSetDevice(0));
 
    mds = 1;
 
@@ -97,7 +96,6 @@ int main(int argc, char* argv[])
    double sd = 0.;
    double chi2a = 0.;
 
-   //gVegas(avgi, sd, chi2a);
    myVegas(avgi, sd, chi2a);
 
    //-------------------------
@@ -122,7 +120,6 @@ int main(int argc, char* argv[])
    std::cout<<"# Refining time per iteration: " <<timeVegasRefine/(double)it<<std::endl;
    std::cout<<"#==========================="<<std::endl;
 
-   //cudaThreadExit();
 
    return 0;
 }
