@@ -267,7 +267,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
       int i, idx, ipg, iaj, idim, pieces;
       double f, f2, f2b, fb;
       unsigned ig;
-    #pragma omp parallel default(shared) private(iaj, idim, ig, f, f2, fb, f2b, ipg, i, idx) reduction (+:ti, tsi)
+    #pragma omp parallel private(iaj, idim, ig, f, f2, fb, f2b, ipg, i, idx) reduction (+:ti, tsi)
     {
       pieces = (nCubes + maxthreads - 1) / maxthreads;
       i = omp_get_thread_num();
@@ -304,18 +304,18 @@ void gVegas(double& avgi, double& sd, double& chi2a)
           }
         }
       }
-    //}
+
 
 //      std::cout<<"mds = "<<mds<<std::endl;
       if (mds>0) {
-        pieces = (nCubeNpg + maxthreads - 1) / maxthreads;
+        int mdspieces = (nCubeNpg + maxthreads - 1) / maxthreads;
          //         std::cout<<"ndim = "<<ndim<<std::endl;
        for (idim=0;idim<ndim;idim++) {
           //            std::cout<<"idim = "<<idim<<std::endl;
           //#pragma omp parallel private(i, idx, iaj, f, f2) reduction (+:d)
           //{
             //i = omp_get_thread_num();
-            for (idx=i*pieces; idx<(i+1)*pieces; idx++) {
+            for (idx=i*mdspieces; idx<(i+1)*mdspieces; idx++) {
                //               std::cout<<"idx = "<<idx<<std::endl;
               if (idx < nCubeNpg){
                iaj = hIAval[idim*nCubeNpg+idx];
