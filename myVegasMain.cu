@@ -89,8 +89,11 @@ int main(int argc, char* argv[])
       xu[i] = 1.; //upper bound
    }
 
-   nprn = 1;
-//   nprn = -1;
+//If nprn = 1 it prints the whole work, when nprn = 0, just the text in this code.
+
+//   nprn = 1;
+//  nprn = -1;
+  nprn = 0;
 
    double avgi = 0.;
    double sd = 0.;
@@ -116,8 +119,8 @@ int main(int argc, char* argv[])
 
    //Print running times!
    std::cout<<"#==========================="<<std::endl;
-   std::cout<<"# Function call time per iteration: " <<timeVegasCallAndFill/(double)it<<std::endl;
-   std::cout<<"# Refining time per iteration: " <<timeVegasRefine/(double)it<<std::endl;
+   printf("# Function call time per iteration: %lf\n", timeVegasCallAndFill/(double)it);
+   printf("# Refining time per iteration: %lf\n", timeVegasRefine/(double)it);
    std::cout<<"#==========================="<<std::endl;
 
 
