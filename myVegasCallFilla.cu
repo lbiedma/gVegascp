@@ -36,8 +36,14 @@ void myVegasCallFilla(int mds)
    //Using float for now, atomicAdd doesn't support double yet...
    __shared__ float block_fb;
    __shared__ float block_f2b;
+   __shared__ float block_d[ndim_max][nd_max];
+
    block_fb = 0.0f;
    block_f2b = 0.0f;
+   for (int idim = 0; idim < g_ndim; idim++){
+     for (int ind = 0; ind < g_nd; ind ++)
+     block_d[idim][ind] = 0.0f;
+   }
 
    //int ig = tid;
    int lane = tIdx % warpSize;
@@ -95,7 +101,7 @@ void myVegasCallFilla(int mds)
         //If mds = 1, we just have to add f^2 to the corresponding space in d.
         if (mds > 0){
           for (int idim = 0; idim < g_ndim; idim++) {
-            atomicAdd(&(d[idim][ia[idim]]), f2);
+            atomicAdd(&block_d[idim][ia[idim]], f2);
           }
         }
       }
@@ -107,7 +113,7 @@ void myVegasCallFilla(int mds)
       f2b = (f2b - fb) * (f2b - fb);
       if (mds < 0){
         for (int idim = 0; idim < g_ndim; idim++){
-          atomicAdd(&d[idim][ia[idim]], f2b);
+          atomicAdd(&block_d[idim][ia[idim]], f2b);
         }
       }
       __syncthreads();
@@ -129,6 +135,10 @@ void myVegasCallFilla(int mds)
       if (0 == tIdx){
         atomicAdd(&dti, block_fb);
         atomicAdd(&dtsi, block_f2b);
+        for (int idim = 0; idim < g_ndim; idim++){
+          for (int ind = 0; ind < g_nd; ind ++)
+          atomicAdd(&d[idim][ind], block_d[idim][ind]);
+        }
       }
     }
 

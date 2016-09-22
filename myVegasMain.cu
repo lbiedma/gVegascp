@@ -90,10 +90,11 @@ int main(int argc, char* argv[])
    }
 
 //If nprn = 1 it prints the whole work, when nprn = 0, just the text in this code.
+//If nprn = -1, we can get the grid update information.
 
-//   nprn = 1;
+  nprn = 1;
 //  nprn = -1;
-  nprn = 0;
+//  nprn = 0;
 
    double avgi = 0.;
    double sd = 0.;
@@ -123,6 +124,20 @@ int main(int argc, char* argv[])
    printf("# Refining time per iteration: %lf\n", timeVegasRefine/(double)it);
    std::cout<<"#==========================="<<std::endl;
 
+
+    /* Instructions for time measure
+    char archivo[64];
+    sprintf(archivo, "./datos/redtime/myVegas/red_d%dn%d.dat", ndim0, ncall0);
+    FILE *f = fopen(archivo, "ab+");
+    if (f == NULL)
+    {
+        printf("Error opening file!\n");
+        exit(1);
+    }
+
+    fprintf(f, "%lf\n", timeVegasCallAndFill/(double)it);
+    fclose(f);
+    */
 
    return 0;
 }
