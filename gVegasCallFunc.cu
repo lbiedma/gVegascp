@@ -1,19 +1,6 @@
 #include "vegasconst.h"
 #include "vegas.h"
 
-//TEST FUNCTIONS VARIABLES
-__device__ float move[ndim_max]; //Goes from 0 to 1 in every variable.
-__device__ float offset[ndim_max]; //Goes from 0 to 1 in every variable but can be renormalized to change "difficulty".
-
-//TO GET TEST FUNCTIONS TO WORK, RUN THIS FIRST
-__global__
-void myVegasStartVectors(void){
-   unsigned int semillita1 = 1;
-   unsigned int semillita2 = 2;
-   fxorshift128(semillita1, g_ndim, move);
-   fxorshift128(semillita2, g_ndim, offset);
-}
-
 __global__
 void gVegasCallFunc(float* gFval, int* gIAval)
 {
