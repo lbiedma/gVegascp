@@ -1,6 +1,19 @@
 #include "vegasconst.h"
 #include "vegas.h"
 
+//TEST FUNCTIONS VARIABLES
+__device__ float move[ndim_max]; //Goes from 0 to 1 in every variable.
+__device__ float offset[ndim_max]; //Goes from 0 to 1 in every variable but can be renormalized to change "difficulty".
+
+//TO GET TEST FUNCTIONS TO WORK, RUN THIS FIRST
+__global__
+void myVegasStartVectors(void){
+   unsigned int semillita1 = 1;
+   unsigned int semillita2 = 2;
+   fxorshift128(semillita1, g_ndim, move);
+   fxorshift128(semillita2, g_ndim, offset);
+}
+
 __global__
 void gVegasCallFunc(float* gFval, int* gIAval)
 {
@@ -59,7 +72,21 @@ void gVegasCallFunc(float* gFval, int* gIAval)
          wgt *= xo*(float)g_nd;
       }
       
-      float f = wgt * func(x,wgt);
+      /* COMMENT THE FUNCTION YOU WANT TO USE */	
+	//Parabolloid
+        //f = wgt * func(x,wgt);
+	//Oscillatory
+	f = wgt * oscillate(x, wgt, move, offset);
+	//Product Peak
+	//f = wgt * prodpeak(x, wgt, move, offset);
+	//Corner Peak
+	//f = wgt * cornerpeak(x, wgt, offset);
+	//Gaussian
+	//f = wgt * gaussian(x, wgt, move, offset);
+        //C^0-Continuous
+	//f = wgt * czerocont(x, wgt, move, offset);
+	//Discontinuous
+	//f = wgt * discont(x, wgt, move, offset);
       
       //      gFval[tid] = (float)typeFinal[2];
       gFval[tid] = f;
