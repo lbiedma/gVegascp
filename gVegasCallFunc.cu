@@ -1,6 +1,10 @@
 #include "vegasconst.h"
 #include "vegas.h"
 
+//TEST FUNCTIONS VARIABLES
+__device__ float move[ndim_max]; //Goes from 0 to 1 in every variable.
+__device__ float offset[ndim_max]; //Goes from 0 to 1 in every variable but can be renormalized to change "difficulty".
+
 __global__
 void gVegasCallFunc(float* gFval, int* gIAval)
 {
@@ -59,6 +63,8 @@ void gVegasCallFunc(float* gFval, int* gIAval)
          wgt *= xo*(float)g_nd;
       }
       
+      float f;
+
       /* COMMENT THE FUNCTION YOU WANT TO USE */	
 	//Parabolloid
         //f = wgt * func(x,wgt);
