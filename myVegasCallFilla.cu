@@ -5,6 +5,11 @@ __device__ float d[ndim_max][nd_max];
 __device__ float dti, dtsi;
 __device__ double doubleti, doubletsi;
 
+//TEST FUNCTIONS VARIABLES
+__device__ float move[ndim_max]; //Goes from 0 to 1 in every variable.
+__device__ float offset[ndim_max]; //Goes from 0 to 1 in every variable but can be renormalized to change "difficulty".
+
+
 __global__
 void initzero(void){
   for (int dim = 0; dim < g_ndim; dim++){
@@ -15,6 +20,15 @@ void initzero(void){
   dti = 0.0f;
   dtsi = 0.0f;
 }
+
+//TO GET TEST FUNCTIONS TO WORK, RUN THIS FIRST
+__global__
+void myVegasStartVectors(void){
+   unsigned int semillita1 = 1;
+   unsigned int semillita2 = 2;
+   fxorshift128(semillita1, g_ndim, move);
+   fxorshift128(semillita2, g_ndim, offset);
+}	
 
 __global__
 void myVegasCallFilla(int mds)
@@ -38,6 +52,7 @@ void myVegasCallFilla(int mds)
    __shared__ float block_f2b;
    __shared__ float block_d[ndim_max][nd_max];
 
+
    block_fb = 0.0f;
    block_f2b = 0.0f;
    for (int idim = 0; idim < g_ndim; idim++){
@@ -55,6 +70,7 @@ void myVegasCallFilla(int mds)
    float f, f2;
    float fb = 0.0f;
    float f2b = 0.0f;
+
 
    if (tid<g_nCubes) {
 
@@ -74,11 +90,13 @@ void myVegasCallFilla(int mds)
         float x[ndim_max];
 
         float wgt = g_xjac;
+
         /*
         This piece of code places the random point in the domain of integration,
         g_xi will change at every iteration as a result of the refining step, so
         the weight will change as well.
         */
+
         for (int j=0;j<g_ndim;j++) {
           float xo,xn,rc;
           xn = (kg[j]-randm[j])*g_dxg+1.f;
@@ -93,9 +111,24 @@ void myVegasCallFilla(int mds)
           x[j] = g_xl[j]+rc*g_dx[j];
           wgt *= xo*(float)g_nd;
         }
-
-        f = wgt * func(x,wgt);
-        fb += f;
+	
+	/* COMMENT THE FUNCTION YOU WANT TO USE */	
+	//Parabolloid
+        //f = wgt * func(x,wgt);
+	//Oscillatory
+	f = wgt * oscillate(x, wgt, move, offset);
+	//Product Peak
+	//f = wgt * prodpeak(x, wgt, move, offset);
+	//Corner Peak
+	//f = wgt * cornerpeak(x, wgt, offset);
+	//Gaussian
+	//f = wgt * gaussian(x, wgt, move, offset);
+        //C^0-Continuous
+	//f = wgt * czerocont(x, wgt, move, offset);
+	//Discontinuous
+	//f = wgt * discont(x, wgt, move, offset);
+        
+	fb += f;
         f2 = f*f;
         f2b += f2;
         //If mds = 1, we just have to add f^2 to the corresponding space in d.
