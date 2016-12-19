@@ -5,10 +5,6 @@ __device__ float d[ndim_max][nd_max];
 __device__ float dti, dtsi;
 __device__ double doubleti, doubletsi;
 
-//TEST FUNCTIONS VARIABLES
-__device__ float move[ndim_max]; //Goes from 0 to 1 in every variable.
-__device__ float offset[ndim_max]; //Goes from 0 to 1 in every variable but can be renormalized to change "difficulty".
-
 
 __global__
 void initzero(void){

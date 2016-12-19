@@ -16,5 +16,9 @@ __device__ __constant__ float g_xi[ndim_max][nd_max];
 
 __device__ __constant__ unsigned g_nCubes;
 
+//TEST FUNCTIONS VARIABLES
+__device__ __constant__ float move[ndim_max]; //Goes from 0 to 1 in every variable.
+__device__ __constant__ float offset[ndim_max]; //Goes from 0 to 1 in every variable but can be renormalized to change "difficulty".
+
 #endif
 
