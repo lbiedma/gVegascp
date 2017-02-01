@@ -1,0 +1,186 @@
+%\documentclass[spanish]{maciarticle}
+\documentclass[english]{maciarticle}
+%% Si su art\'{\i}culo est\'{a} escrito en ingl\'{e}s debe escribir la opci\'{o}n "english"
+
+\usepackage{amsmath,amsbsy,amscd,amssymb,graphicx,epsfig,color}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\title{Monte Carlo Integration: the VEGAS algorithm for Graphics Processing Units}
+
+\author[$a$]{Luis Biedma}
+\author[$b$]{Flavio Colavecchia}
+\affil[$a$]{FAMAF - Universidad Nacional de C\'ordoba,
+	           CIEM - CONICET,
+               \textcolor{blue}{lbiedma@famaf.unc.edu.ar}}
+%
+\affil[$b$]{Div. F\'isica At\'omica, Molecular y \'Optica,
+	            Centro At\'omico Bariloche,
+	            CONICET,
+                \textcolor{blue}{flavioc@cab.cnea.gov.ar}}
+
+
+ \maketitle
+
+
+\begin{abstract}
+This work presents a study and modification of the VEGAS integrating algorithm in graphics processing units. The changes made to a reviewed program allow for better performance and use of memory to incorporate more evaluation points, which was an important restriction for the original code on high dimension spaces.
+\end{abstract}
+\begin{keywords}
+GPU, Monte Carlo methods, VEGAS
+\end{keywords}
+\begin{mathsubclass}
+65C05 - 68M20
+\end{mathsubclass}
+
+
+{\thispagestyle{empty}} %NO BORRE ESTA LINEA
+
+
+
+%%===============================
+\section{Introduction}
+%%===============================
+
+Monte Carlo methods are a wide and well known class of computational algorithms that rely on repeated random samplings to get numerical results. One of their main applications is the numerical integration of functions in problems ranging from particle physics\cite{lhc} to cosmology\cite{cosmo}. The usual working pattern for these algorithms is:
+
+\begin{itemize}
+	\item Definition of a possible input domain.
+	\item Generation of random inputs from a \textit{probability distribution} over the domain.
+	\item \textit{Deterministic} computations over the inputs.
+	\item Results gathering.
+\end{itemize}
+
+Since its creation, lots of efforts have been made in order to boost Monte Carlo methods performance, especially concerning the minimization of numerical errors and the algorithm's speed, trying to adapt them to every new coming computing architecture, including graphics processing units (GPUs), by creating different alternatives for them\cite{montesurvey}.
+
+One of those alternatives is the VEGAS algorithm, created by G.P. Lepage\cite{vegas}. It is based in the concept of \textit{importance sampling}: It samples points from the probability distribution described by the function $\|f\|$ to be integrated, so that the sampling points are concentrated in the regions that make the largest contribution to the integral. VEGAS is based on an iterative and adaptive Monte Carlo scheme: each axis of variable is divided into grids, dividing the integration space into hypercubes. Monte Carlo integrations are performed on each hypercube and the variances from hypercubes are used to adapt the shape of the grids, which will be used in the next iteration, reducing the variance of the total integral at each step.
+
+This work concentrates on the study and improvement of a multi-dimensional VEGAS algorithm, which uses GPUs, created by J. Kanzaki in 2011\cite{kanzaki}.
+
+\section{The Initial Program} 
+Kanzaki's code can be found at \textcolor{blue}{http://madgraph.kek.jp/KEK/GPU/gVEGAS/example/}. It is written in CUDA language, adapted from FORTRAN code written by Lepage\cite{lepagecode}. There is a single and double precision version available in the webpage. The steps followed by the program in each iteration are:
+
+\begin{enumerate}
+	\item Generation of the integration space, separating it in hypercubes.
+	\item That data is sent to the GPU, where the function evaluations are performed and the information per hypercube is gathered.
+	\item These results are sent back to the CPU, where weighted averages, approximation errors and the reallocation of the grid are performed.
+	\item If the amount of iterations is reached or a minimum value of error is obtained, the program stops.
+\end{enumerate} 
+
+Although this code has a great performance relative to the first stages of VEGAS (evaluating a function in lots of different points in space on GPUs is an embarrasingly parallel task), there are still some issues that are addresed in this work.
+
+There is a considerable amount of data moved between GPU and CPU. The code generates an array of evaluations (one for each point) and also needs to store the hypercube the point is occupying for every dimension in the integration space. So, for every evaluation point, the program needs (\textit{dim}+1) * 4 bytes (in single precision) of RAM, where \textit{dim} is the dimension of the integration space. When working on GPUs, memory management is an important issue and it is not properly addressed in this code.
+
+The complete weighted averages are computed in the CPU, but it can be also done in GPU, because the \textit{reduction} operation is easy to parallelize. The grid evaluation can also work in parallel.
+
+\section{Modifications}
+
+Since the last version of the original code was submitted in 2012, some of the CUDA functions in it were deprecated, so they were purged. The time measuring function was replaced by OpenMP's \textit{omp\_get\_wtime()}.
+
+There is a kernel in the original CUDA implementation that is in charge of creating the random points, evaluating the function on them and creating the location arrays for each dimension. The modified kernel now performs the values (and their squares) reduction, aided by the \textit{atomicAdd} instruction\cite{cudaprog} and also takes the data to a histogram array, which is passed to the CPU to obtain the grid rearrangement for the next iteration. This array has a fixed size, so there aren't any memory problems.
+
+An important note is that the original code passes single precision numbers to double when it computes the weighted averages for the integrals. The new code uses only single precision since it works with the \textit{atomicAdd} instruction and it is only available for single precision in the Maxwell architecture, which was the one available for this work.
+
+The entire code is hosted at \textcolor{blue}{https://github.com/lbiedma/gVegascp}.
+
+\section{Numerical Results}
+
+\subsection*{Speed Comparison}
+The hardware specifications for the experiments are:
+
+\vspace{-1cm}
+
+\begin{center}
+	\begin{tabular}{ll}
+		\hline
+		\textbf{CPU} & 2x Intel(R) Xeon(R) CPU E5-2620 (12 cores at 2.40 GHz) \\
+		\textbf{Memory} & 126 GB \\
+		\textbf{GPU} & NVIDIA GeForce GTX Titan X (12 GB RAM)\\
+		\hline
+	\end{tabular}
+\end{center}
+
+\vspace{-1cm}
+
+The termination conditions were set at $1x10^{-6}$ for the relative error between estimated integrals per step and 10 as the max amount of iterations. The space dimension $d$ was limited to a maximum of 8 and the amount of points used was increased on each execution from $2^{10}$ to $2^{24}$ (the memory limitations on the original code made it impossible to reach higher dimension numbers). Only for performance purposes, the multi-dimensional paraboloid ($\|x\|^2$) in the $[-1,1]^d$ was chosen.
+
+The following graph shows the performance of the original and the modified programs, with time normalized by the number of points used and the amount of iterations.
+
+\begin{center}
+	\includegraphics[width = .9\textwidth]{comparison.png}
+\end{center}
+
+It can be observed that both programs perform at almost the same speed at first, but the original starts losing performance as the amount of function evaluations increases and more points can't be evaluated because of memory restrictions for the original code.
+
+\subsection*{Results Benchmarks}
+As another evaluation for the modified code, six families of functions were tested to check the algorithm's correctness because of the reduction stage remarks mentioned in Section 3. The functions were chosen based in the Cuba integration library paper\cite{hahncuba}:
+
+\begin{center}
+	\begin{tabular}{lll}
+		\textbf{Oscillatory} & $f_1(x) = cos(c.x+2 \pi w_1)$ \\
+		\textbf{Product Peak} & $f_2(x) = \prod_{i = 1}^{n_d} \frac{1}{(x_i - w_i)^2 + c_i ^{-2}}$ \\
+		\textbf{Corner Peak} & $f_3(x) = \frac{1}{(1+c.x)^{n_d+1}}$\\
+		\textbf{Gaussian} & $f_4(x) = exp(-c^2(x-2)^2)$\\
+		\textbf{$C^0$-continuous} & $f_5(x) = exp(-c.|x-w|)$\\
+		\textbf{Discontinuous} & $ f_6(x) =
+		\begin{cases} 
+		0 & for \hspace{5pt} x_1 > w_1 \vee x_2 > w_2, \\
+		exp(c.x) & otherwise \\
+		\end{cases}$
+	\end{tabular}
+\end{center}
+
+
+\section{Summary and Outlooks}
+The modifications applied to the original program allowed it to perform at a higher speed for big problems and manage memory in a better way, which is an important issue when working with GPUs, since RAM is highly limited.
+
+NVIDIA's new GPU architecture (Pascal) incorporates the \textit{atomicAdd} instruction for double precision numbers\cite{pascal}, this will be really useful to achieve high performance in double real and complex precision computations, and may be the subject of future work. 
+
+\section*{Acknowledgments}
+The first author would like to thank Nicol\'as Wolovick and Carlos Bederi\'an, of the
+GPGPU Computing Group in FAMAF, Universidad Nacional de C\'ordoba, for their Parallel Programming course and its notes\cite{cp2016}, where this work began.
+
+
+%%=========================================
+\begin{thebibliography}{1}
+%%=========================================
+\bibitem{lhc} {\sc{S. Wertz}},
+\emph{The Matrix Element Method at the LHC: Status and prospects for Run II},
+17th International Workshop on Advanced Computing and Analysis Techniques in Physics Research, 2016.
+
+\bibitem{cosmo} {\sc{A. Taruya}},
+\emph{Constructing perturbation theory kernels for large-scale structure in generalized cosmologies},
+Physical Review D - Particles, Fields, Gravitation and Cosmology, 2016.
+
+\bibitem{montesurvey} {\sc{J.H.Halton}},
+\emph{A Retrospective and Prospective Survey of the Monte Carlo Method}
+SIAM Review, 1970.
+
+\bibitem{vegas} {\sc{G.P. Lepage}},
+\emph{A new algorithm for adaptive multidimensional integration},
+Journal of Computational Physics, 1978.
+
+\bibitem{kanzaki} {\sc{J. Kanzaki}},
+{\em Monte Carlo integration on GPU},
+The European Physical Journal C, 2011.
+
+\bibitem{lepagecode} {\sc{G.P. Lepage}},
+{\em VEGAS: An Adaptive Multi-dimensional Integration Program},
+Cornell preprint CLNS, 1980.
+
+\bibitem{cudaprog} {\sc{NVIDIA}}, {\em CUDA C Programming Guide},
+\textcolor{blue}{http://docs.nvidia.com/cuda/cuda-c-programming-guide}.
+
+\bibitem{pascal} {\sc{NVIDIA}}, {\em CUDA Pascal Tuning Guide} \textcolor{blue}{http://docs.nvidia.com/cuda/pascal-tuning-guide}.
+
+\bibitem{hahncuba} {\sc{T. Hahn}},
+\emph{Cuba - a library for multidimensional numerical integration},
+Computer Physics Communications, 2005.
+
+\bibitem{cp2016} {\sc{Nicolas Wolovick}},
+{\em Computaci\'on Paralela 2016}, \textcolor{blue}{https://cs.famaf.unc.edu.ar/\~nicolasw/Docencia/CP/2016/index.html},
+FAMAF - UNC, 2016.
+\end{thebibliography}
+
+\end{document}
