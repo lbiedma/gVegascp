@@ -17,7 +17,7 @@ void initzero(void){
   dtsi = 0.0f;
 }
 
-//TO GET TEST FUNCTIONS TO WORK, RUN THIS FIRST
+/*TO GET SOME TEST FUNCTIONS TO WORK, RUN THIS FIRST
 __global__
 void myVegasStartVectors(void){
    unsigned int semillita1 = 1;
@@ -25,6 +25,7 @@ void myVegasStartVectors(void){
    fxorshift128(semillita1, g_ndim, move);
    fxorshift128(semillita2, g_ndim, offset);
 }	
+*/
 
 __global__
 void myVegasCallFilla(int mds)
@@ -108,7 +109,7 @@ void myVegasCallFilla(int mds)
           wgt *= xo*(float)g_nd;
         }
 	
-	/* COMMENT THE FUNCTION YOU WANT TO USE */	
+	/* COMMENT THE FUNCTION YOU WANT TO USE	
 	//Parabolloid
         //f = wgt * func(x,wgt);
 	//Oscillatory
@@ -123,7 +124,9 @@ void myVegasCallFilla(int mds)
 	//f = wgt * czerocont(x, wgt, move, offset);
 	//Discontinuous
 	//f = wgt * discont(x, wgt, move, offset);
-        
+        */
+	f = wgt * sum(x, g_ndim);	
+
 	fb += f;
         f2 = f*f;
         f2b += f2;

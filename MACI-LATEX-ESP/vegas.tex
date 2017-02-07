@@ -63,10 +63,11 @@ Kanzaki's code can be found at \textcolor{blue}{http://madgraph.kek.jp/KEK/GPU/g
 
 \begin{enumerate}
 	\item Generation of the integration space, separating it in hypercubes.
-	\item That data is sent to the GPU, where the function evaluations are performed and the information per hypercube is gathered.
-	\item These results are sent back to the CPU, where weighted averages, approximation errors and the reallocation of the grid are performed.
-	\item If the amount of iterations is reached or a minimum value of error is obtained, the program stops.
+	\item \vspace{-0.3cm} That data is sent to the GPU, where the function evaluations are performed and the information per hypercube is gathered.
+	\item \vspace{-0.3cm} These results are sent back to the CPU, where weighted averages, approximation errors and the reallocation of the grid are performed.
+	\item \vspace{-0.6cm} If the amount of iterations is reached or a minimum value of error is obtained, the program stops.
 \end{enumerate} 
+
 
 Although this code has a great performance relative to the first stages of VEGAS (evaluating a function in lots of different points in space on GPUs is an embarrasingly parallel task), there are still some issues that are addresed in this work.
 
@@ -76,9 +77,7 @@ The complete weighted averages are computed in the CPU, but it can be also done 
 
 \section{Modifications}
 
-Since the last version of the original code was submitted in 2012, some of the CUDA functions in it were deprecated, so they were purged. The time measuring function was replaced by OpenMP's \textit{omp\_get\_wtime()}.
-
-There is a kernel in the original CUDA implementation that is in charge of creating the random points, evaluating the function on them and creating the location arrays for each dimension. The modified kernel now performs the values (and their squares) reduction, aided by the \textit{atomicAdd} instruction\cite{cudaprog} and also takes the data to a histogram array, which is passed to the CPU to obtain the grid rearrangement for the next iteration. This array has a fixed size, so there aren't any memory problems.
+There is a kernel in the original CUDA implementation that is in charge of generating random points, evaluating the function on them and creating the location arrays for each dimension. The modified kernel now performs the values (and their squares) reduction, aided by the \textit{atomicAdd} instruction\cite{cudaprog} and also takes the data to a histogram array, which is passed to the CPU to obtain the grid rearrangement for the next iteration. This array has a fixed size, so there aren't any memory problems.
 
 An important note is that the original code passes single precision numbers to double when it computes the weighted averages for the integrals. The new code uses only single precision since it works with the \textit{atomicAdd} instruction and it is only available for single precision in the Maxwell architecture, which was the one available for this work.
 
@@ -87,7 +86,7 @@ The entire code is hosted at \textcolor{blue}{https://github.com/lbiedma/gVegasc
 \section{Numerical Results}
 
 \subsection*{Speed Comparison}
-The hardware specifications for the experiments are:
+The hardware specifications for the experiments were:
 
 \vspace{-1cm}
 
@@ -103,7 +102,7 @@ The hardware specifications for the experiments are:
 
 \vspace{-1cm}
 
-The termination conditions were set at $1x10^{-6}$ for the relative error between estimated integrals per step and 10 as the max amount of iterations. The space dimension $d$ was limited to a maximum of 8 and the amount of points used was increased on each execution from $2^{10}$ to $2^{24}$ (the memory limitations on the original code made it impossible to reach higher dimension numbers). Only for performance purposes, the multi-dimensional paraboloid ($\|x\|^2$) in the $[-1,1]^d$ was chosen.
+The termination conditions were set at $1 \times 10^{-6}$ for the relative error between estimated integrals per step and 10 as the max amount of iterations. The space dimension $d$ was limited to a maximum of 8 and the amount of points used was increased on each execution from $2^{10}$ to $2^{24}$ (the memory limitations on the original code made it impossible to reach higher dimension numbers). Only for speed comparison purposes, the multi-dimensional paraboloid ($\|x\|^2$) in the $[-1,1]^d$ was chosen.
 
 The following graph shows the performance of the original and the modified programs, with time normalized by the number of points used and the amount of iterations.
 
@@ -111,25 +110,27 @@ The following graph shows the performance of the original and the modified progr
 	\includegraphics[width = .9\textwidth]{comparison.png}
 \end{center}
 
-It can be observed that both programs perform at almost the same speed at first, but the original starts losing performance as the amount of function evaluations increases and more points can't be evaluated because of memory restrictions for the original code.
+It can be observed that both programs perform at almost the same speed at first, but the new program continues to maintain a good performance as the amount of function evaluations increases. More points couldn't be evaluated because of memory restrictions for the original code.
 
-\subsection*{Results Benchmarks}
-As another evaluation for the modified code, six families of functions were tested to check the algorithm's correctness because of the reduction stage remarks mentioned in Section 3. The functions were chosen based in the Cuba integration library paper\cite{hahncuba}:
+\subsection*{Benchmarking}
+%As another evaluation for the modified code, six families of functions were tested to check the algorithm's correctness because of the reduction stage remarks mentioned in Section 3. The functions were chosen based in the Cuba integration library paper\cite{hahncuba}:
 
-\begin{center}
-	\begin{tabular}{lll}
-		\textbf{Oscillatory} & $f_1(x) = cos(c.x+2 \pi w_1)$ \\
-		\textbf{Product Peak} & $f_2(x) = \prod_{i = 1}^{n_d} \frac{1}{(x_i - w_i)^2 + c_i ^{-2}}$ \\
-		\textbf{Corner Peak} & $f_3(x) = \frac{1}{(1+c.x)^{n_d+1}}$\\
-		\textbf{Gaussian} & $f_4(x) = exp(-c^2(x-2)^2)$\\
-		\textbf{$C^0$-continuous} & $f_5(x) = exp(-c.|x-w|)$\\
-		\textbf{Discontinuous} & $ f_6(x) =
-		\begin{cases} 
-		0 & for \hspace{5pt} x_1 > w_1 \vee x_2 > w_2, \\
-		exp(c.x) & otherwise \\
-		\end{cases}$
-	\end{tabular}
-\end{center}
+%\begin{center}
+%	\begin{tabular}{lll}
+%		\textbf{Oscillatory} & $f_1(x) = cos(c.x+2 \pi w_1)$ \\
+%		\textbf{Product Peak} & $f_2(x) = \prod_{i = 1}^{n_d} \frac{1}{(x_i - w_i)^2 + c_i ^{-2}}$ \\
+%		\textbf{Corner Peak} & $f_3(x) = \frac{1}{(1+c.x)^{n_d+1}}$\\
+%		\textbf{Gaussian} & $f_4(x) = exp(-c^2(x-2)^2)$\\
+%		\textbf{$C^0$-continuous} & $f_5(x) = exp(-c.|x-w|)$\\
+%		\textbf{Discontinuous} & $ f_6(x) =
+%		\begin{cases} 
+%		0 & for \hspace{5pt} x_1 > w_1 \vee x_2 > w_2, \\
+%		exp(c.x) & otherwise \\
+%		\end{cases}$
+%	\end{tabular}
+%\end{center}
+
+
 
 
 \section{Summary and Outlooks}

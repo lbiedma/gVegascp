@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
    npg = 0;
 
    for (int i=0;i<ndim;i++) { //Choose the box where to integrate
-      xl[i] = -1.; //lower bound
+      xl[i] = 0.; //lower bound
       xu[i] = 1.; //upper bound
    }
 
