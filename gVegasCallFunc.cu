@@ -61,7 +61,7 @@ void gVegasCallFunc(float* gFval, int* gIAval)
       
       float f;
 
-      /* COMMENT THE FUNCTION YOU WANT TO USE */	
+      /* COMMENT THE FUNCTION YOU WANT TO USE	
 	//Parabolloid
         //f = wgt * func(x,wgt);
 	//Oscillatory
@@ -76,7 +76,9 @@ void gVegasCallFunc(float* gFval, int* gIAval)
 	//f = wgt * czerocont(x, wgt, move, offset);
 	//Discontinuous
 	//f = wgt * discont(x, wgt, move, offset);
-      
+      */      
+
+	f = wgt * sum(x, g_ndim);
       //      gFval[tid] = (float)typeFinal[2];
       gFval[tid] = f;
       for (int idim=0;idim<g_ndim;idim++) {
