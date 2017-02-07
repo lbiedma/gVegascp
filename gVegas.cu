@@ -228,9 +228,10 @@ void gVegas(double& avgi, double& sd, double& chi2a)
    double startVegasFill, endVegasFill;
    double startVegasRefine, endVegasRefine;
 
-   //Kickstart Test Functions vectors
+   /*Kickstart Test Functions vectors
    myVegasStartVectors<<<1, 1>>>();
    getLastCudaError("Couldn't start vectors");
+   */
 
    do {
 
