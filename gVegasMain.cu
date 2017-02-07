@@ -84,7 +84,7 @@ int main(int argc, char** argv)
    npg = 0;
 
    for (int i=0;i<ndim;i++) {
-      xl[i] = -1.;
+      xl[i] = 0.;
       xu[i] = 1.;
    }
    //If nprn = 1 it prints the whole work, when nprn = 0, just the text in this code
