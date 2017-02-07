@@ -261,7 +261,7 @@ void myVegas(double& avgi, double& sd, double& chi2a)
          std::cout<<"                          std dev  = "<<sd<<std::endl;
 	 if (it > 1) {
             std::cout<<"                          chi**2 per it'n = "
-                     <<std::setw(10)<<std::setprecision(4)<<chi2a<<std::endl;
+                     <<std::setw(10)<<std::setprecision(6)<<chi2a<<std::endl;
          }
          if (nprn<0) {
             for (int j=0;j<ndim;j++) {
@@ -272,7 +272,7 @@ void myVegas(double& avgi, double& sd, double& chi2a)
                std::cout<<"    x    delt i   convce"<<std::endl;
 
                for (int i=0;i<nd;i+=3) {
-                  std::cout<<std::setw(6)<<std::setprecision(4)<<std::setfill(' ')
+                  std::cout<<std::setw(6)<<std::setprecision(6)<<std::setfill(' ')
                            <<xi[j][i]<<" "<<hd[j][i]<<" "<<hd[j][i];
                   std::cout<<std::setw(6)<<std::setprecision(4)
                            <<xi[j][i+1]<<" "<<hd[j][i+1]<<" "<<hd[j][i+1];
