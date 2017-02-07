@@ -90,9 +90,9 @@ int main(int argc, char** argv)
    //If nprn = 1 it prints the whole work, when nprn = 0, just the text in this code
    //If nprn = -1, we can get the grid update information.
 
-//   nprn = 1;
+   nprn = 1;
 //   nprn = -1;
-  nprn = 0;
+//  nprn = 0;
 
    double avgi = 0.;
    double sd = 0.;
