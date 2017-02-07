@@ -377,7 +377,7 @@ void gVegas(double& avgi, double& sd, double& chi2a)
          std::cout<<"                          std dev  = "<<sd<<std::endl;
 	 if (it > 1) {
             std::cout<<"                          chi**2 per it'n = "
-                     <<std::setw(10)<<std::setprecision(4)<<chi2a<<std::endl;
+                     <<std::setw(10)<<std::setprecision(6)<<chi2a<<std::endl;
          }
          if (nprn<0) {
             for (int j=0;j<ndim;j++) {
