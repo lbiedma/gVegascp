@@ -17,15 +17,6 @@ void initzero(void){
   dtsi = 0.0f;
 }
 
-/*TO GET SOME TEST FUNCTIONS TO WORK, RUN THIS FIRST
-__global__
-void myVegasStartVectors(void){
-   unsigned int semillita1 = 1;
-   unsigned int semillita2 = 2;
-   fxorshift128(semillita1, g_ndim, move);
-   fxorshift128(semillita2, g_ndim, offset);
-}	
-*/
 
 __global__
 void myVegasCallFilla(int mds)
@@ -109,23 +100,24 @@ void myVegasCallFilla(int mds)
           wgt *= xo*(float)g_nd;
         }
 	
-	/* COMMENT THE FUNCTION YOU WANT TO USE	
-	//Parabolloid
-        //f = wgt * func(x,wgt);
-	//Oscillatory
-	f = wgt * oscillate(x, wgt, move, offset);
-	//Product Peak
-	//f = wgt * prodpeak(x, wgt, move, offset);
-	//Corner Peak
-	//f = wgt * cornerpeak(x, wgt, offset);
-	//Gaussian
-	//f = wgt * gaussian(x, wgt, move, offset);
-        //C^0-Continuous
-	//f = wgt * czerocont(x, wgt, move, offset);
-	//Discontinuous
-	//f = wgt * discont(x, wgt, move, offset);
-        */
-	f = wgt * sum(x, g_ndim);	
+//	f = wgt * sum(x, g_ndim);	
+//	f = wgt * sqsum(x, g_ndim);
+//	f = wgt * sumsqroot(x, g_ndim);
+//	f = wgt * prodones(x, g_ndim);
+//	f = wgt * prodexp(x, g_ndim);
+//	f = wgt * prodcub(x, g_ndim);
+//	f = wgt * prodx(x, g_ndim);
+//	f = wgt * sumfifj(x, g_ndim);
+//	f = wgt * sumfonefj(x, g_ndim);
+//	f = wgt * hellekalek(x, g_ndim);
+//	f = wgt * roosarnoldone(x, g_ndim);
+//	f = wgt * roosarnoldtwo(x, g_ndim);
+//	f = wgt * roosarnoldthree(x, g_ndim);
+//	f = wgt * rst(x, g_ndim);
+//	f = wgt * sobolprod(x, g_ndim);
+//	f = wgt * oscill(x, g_ndim);
+	f = wgt * prpeak(x, g_ndim);
+
 
 	fb += f;
         f2 = f*f;

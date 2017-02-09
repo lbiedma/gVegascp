@@ -62,7 +62,7 @@ float prodcub(float* rx, int dim)
 {
 	float value = 1.f;
 	for (int i = 0; i < dim; i++){
-		value *= (-2.4f*sqrtf(7.f)*(rx[0]-0.5f)+8.f*sqrtf(7.f)*(rx[i]-0.5f)*(rx[i]-0.5f)*(rx[i]-0.5f));
+		value *= (-2.4f*sqrtf(7.f)*(rx[i]-0.5f)+8.f*sqrtf(7.f)*(rx[i]-0.5f)*(rx[i]-0.5f)*(rx[i]-0.5f));
 	}
 	return value;
 }
@@ -73,7 +73,7 @@ float prodx(float* rx, int dim)
 {
 	float value = 1.f;
 	for (int i = 0; i < dim; i++){
-		value *= (r[x] - 0.5f);
+		value *= (rx[i] - 0.5f);
 	}
 	value *= powf(2.f*sqrtf(3.f), (float) dim);
 	return value;
@@ -86,11 +86,11 @@ float sumfifj(float* rx, int dim)
 	for (int i = 0; i < dim; i++){
 		float aux = 0.f;
 		for (int j = 0; j < i; j++){
-			aux += copysignf(1.f,(1.f/6.f - rx[j])*( rx[j] - 4.f/6.f));
+			aux += copysignf(1.f,(1.f/6.f-rx[j])*(rx[j]-4.f/6.f));
 		}
-		value += copysignf(1.f,(1.f/6.f - rx[i])*( rx[i] - 4.f/6.f)) * aux;
+		value += copysignf(1.f,(1.f/6.f-rx[i])*(rx[i]-4.f/6.f))*aux;
 	}
-	value *= sqrtf(2.f/(float)(dim * (dim-1)));
+	value *= sqrtf(2.f/(float)(dim*(dim-1)));
 	return value;
 }
 
@@ -98,7 +98,7 @@ __device__
 float sumfonefj(float* rx, int dim)
 {
 	float value = 0.f;
-	for (i = 1; i < dim; i++){
+	for (int i = 1; i < dim; i++){
 		value += 27.20917094*rx[i]*rx[i]*rx[i]-36.1925085*rx[i]*rx[i]+8.983337562*rx[i]+0.7702079855;
 	}
 	value *= (27.20917094*rx[0]*rx[0]*rx[0]-36.1925085*rx[0]*rx[0]+8.983337562*rx[0]+0.7702079855)/sqrtf((float)dim-1.f);
@@ -118,10 +118,10 @@ float hellekalek(float* rx, int dim)
 __device__
 float roosarnoldone(float* rx, int dim)
 {
-	float value = sqrtf(3.f*(float)dim);
+	float value = 1.f/(float)dim;
 	float aux = 0.f;
 	for (int i = 0; i < dim; i++){
-		aux += fabsf(4.f * rx[i] - 2.f)/(float)dim-1.f;
+		aux += fabsf(4.f*rx[i]-2.f)-1.f;
 	}
 	value *= aux;
 	return value;
@@ -131,7 +131,7 @@ __device__
 //Can give huge error
 float roosarnoldtwo(float* rx, int dim)
 {
-	float value = 1.f/(powf(4.f/3.f, (float)dim/2.f)-1);
+	float value = sqrtf(1.f/(powf(4.f/3.f, (float)dim)-1.f));
 	for (int i = 0; i < dim; i++){
 		value *= (fabsf(4.f*rx[i]-2.f) - 1.f);
 	}
@@ -143,7 +143,7 @@ float roosarnoldthree(float* rx, int dim)
 {
 	float value = 1.f/sqrtf(powf(CUDART_PI_F*CUDART_PI_F/8.f, (float)dim)-1.f);
 	for (int i = 0; i < dim; i++){
-		value *= (CUDART_PI_F/2.f*sinf(CUDART_PI_F*rx[0])-1.f);
+		value *= (CUDART_PI_F/2.f*sinf(CUDART_PI_F*rx[i])-1.f);
 	}
 	return value;
 }
@@ -154,7 +154,7 @@ float rst(float* rx, int dim)
 {
 	float value = 1.f/sqrtf(powf(1.f+1.f/12.f,(float)dim)-1.f);
 	for (int i = 0; i < dim; i++){
-		value *= ((fabsf(4.f*rx[0]-2.f)+1.f)/2.f-1.f);
+		value *= ((fabsf(4.f*rx[i]-2.f)+1.f)/2.f-1.f);
 	}
 	return value;
 }
@@ -198,6 +198,7 @@ float prpeak(float* rx, int dim)
 		e *= (atanf(0.5f)-atanf(-0.5f));
 	}
 	value += -e;
+	return value;
 }
 
 //There are 4 functions missing from the document (CORPEAK, GAUSSIAN, C0 and DISCONT), but it gets really hard from here on to estimate numbers and I prefer stopping here. 17 is a good enough number of test functions.
