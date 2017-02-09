@@ -57,3 +57,42 @@ float prodexp(float* rx, int dim)
 	return value;
 }
 
+__device__
+float prodcub(float* rx, int dim)
+{
+	float value = 1.f;
+	for (int i = 0; i < dim; i++){
+		value *= (-2.4f*sqrtf(7.f)*(rx[0]-0.5f)+8.f*sqrtf(7.f)*(rx[i]-0.5f)*(rx[i]-0.5f)*(rx[i]-0.5f));
+	}
+	return value;
+}
+
+__device__
+//PRODX has a lot of extremes when dimensions are big, it's expected to not do well
+float prodx(float* rx, int dim)
+{
+	float value = 1.f;
+	for (int i = 0; i < dim; i++){
+		value *= (r[x] - 0.5f);
+	}
+	value *= powf(2.f*sqrtf(3.f), (float) dim);
+	return value;
+}
+
+__device__
+float sumfifj(float* rx, int dim)
+{
+	float value = 0.f;
+	for (int i = 0; i < dim; i++){
+		float aux = 0.f;
+		for (int j = 0; j < i; j++){
+			aux += copysignf(1.f,(1.f/6.f - rx[j])*( rx[j] - 4.f/6.f));
+		}
+		value += copysignf(1.f,(1.f/6.f - rx[i])*( rx[i] - 4.f/6.f)) * aux;
+	}
+	value *= sqrtf(2.f/(float)(dim * (dim-1)));
+	return value;
+}
+
+
+

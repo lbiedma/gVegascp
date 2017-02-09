@@ -27,9 +27,11 @@
 \begin{abstract}
 This work presents a study and modification of the VEGAS integrating algorithm in graphics processing units. The changes made to a reviewed program allow for better performance and use of memory to incorporate more evaluation points, which was an important restriction for the original code on high dimension spaces.
 \end{abstract}
+
 \begin{keywords}
 GPU, Monte Carlo methods, VEGAS
 \end{keywords}
+
 \begin{mathsubclass}
 65C05 - 68M20
 \end{mathsubclass}
@@ -59,17 +61,16 @@ One of those alternatives is the VEGAS algorithm, created by G.P. Lepage\cite{ve
 This work concentrates on the study and improvement of a multi-dimensional VEGAS algorithm, which uses GPUs, created by J. Kanzaki in 2011\cite{kanzaki}.
 
 \section{The Initial Program} 
-Kanzaki's code can be found at \textcolor{blue}{http://madgraph.kek.jp/KEK/GPU/gVEGAS/example/}. It is written in CUDA language, adapted from FORTRAN code written by Lepage\cite{lepagecode}. There is a single and double precision version available in the webpage. The steps followed by the program in each iteration are:
+Kanzaki's code can be found at \textcolor{blue}{http://madgraph.kek.jp/KEK/GPU/gVEGAS/example/} and creates the basis for the new program. It is written in CUDA language, adapted from FORTRAN code created originally by Lepage\cite{lepagecode}. There is a single and double precision version available in the webpage. The steps followed by the program in each iteration are:
 
 \begin{enumerate}
-	\item Generation of the integration space, separating it in hypercubes.
+	\item Generation of the integration space, dividing it into hypercubes.
 	\item \vspace{-0.3cm} That data is sent to the GPU, where the function evaluations are performed and the information per hypercube is gathered.
 	\item \vspace{-0.3cm} These results are sent back to the CPU, where weighted averages, approximation errors and the reallocation of the grid are performed.
 	\item \vspace{-0.6cm} If the amount of iterations is reached or a minimum value of error is obtained, the program stops.
 \end{enumerate} 
 
-
-Although this code has a great performance relative to the first stages of VEGAS (evaluating a function in lots of different points in space on GPUs is an embarrasingly parallel task), there are still some issues that are addresed in this work.
+Although this code has great performance relative to the first stages of VEGAS (evaluating a function in lots of different points in space on GPUs is an embarrasingly parallel task), there are still some issues that are addresed in this work.
 
 There is a considerable amount of data moved between GPU and CPU. The code generates an array of evaluations (one for each point) and also needs to store the hypercube the point is occupying for every dimension in the integration space. So, for every evaluation point, the program needs (\textit{dim}+1) * 4 bytes (in single precision) of RAM, where \textit{dim} is the dimension of the integration space. When working on GPUs, memory management is an important issue and it is not properly addressed in this code.
 
@@ -77,18 +78,17 @@ The complete weighted averages are computed in the CPU, but it can be also done 
 
 \section{Modifications}
 
-There is a kernel in the original CUDA implementation that is in charge of generating random points, evaluating the function on them and creating the location arrays for each dimension. The modified kernel now performs the values (and their squares) reduction, aided by the \textit{atomicAdd} instruction\cite{cudaprog} and also takes the data to a histogram array, which is passed to the CPU to obtain the grid rearrangement for the next iteration. This array has a fixed size, so there aren't any memory problems.
+The new CUDA kernel performs the values (and their squares) reduction, aided by the \textit{atomicAdd} instruction\cite{cudaprog} and also takes the data to a histogram array, which is passed to the CPU to obtain the grid rearrangement for the next iteration. In conclusion, this code merges steps 2 and 3 for the original program.
+This array has a fixed (very small relative to the amount of points generated) size,
+so there aren't any memory issues.
 
-An important note is that the original code passes single precision numbers to double when it computes the weighted averages for the integrals. The new code uses only single precision since it works with the \textit{atomicAdd} instruction and it is only available for single precision in the Maxwell architecture, which was the one available for this work.
+An important note is that the original code passes single precision numbers to double when it computes the weighted averages for the integrals. The new code uses only single precision since it works with the \textit{atomicAdd} instruction and it is only available for single precision in the Maxwell architecture, which was the one used for this work.
 
 The entire code is hosted at \textcolor{blue}{https://github.com/lbiedma/gVegascp}.
 
 \section{Numerical Results}
 
-\subsection*{Speed Comparison}
-The hardware specifications for the experiments were:
-
-\vspace{-1cm}
+The performance experiments are divided in two stages: pure speed comparison and numerical correctness. They were run on the following hardware:
 
 \begin{center}
 	\begin{tabular}{ll}
@@ -100,9 +100,11 @@ The hardware specifications for the experiments were:
 	\end{tabular}
 \end{center}
 
-\vspace{-1cm}
 
-The termination conditions were set at $1 \times 10^{-6}$ for the relative error between estimated integrals per step and 10 as the max amount of iterations. The space dimension $d$ was limited to a maximum of 8 and the amount of points used was increased on each execution from $2^{10}$ to $2^{24}$ (the memory limitations on the original code made it impossible to reach higher dimension numbers). Only for speed comparison purposes, the multi-dimensional paraboloid ($\|x\|^2$) in the $[-1,1]^d$ was chosen.
+
+\subsection*{Speed Comparison}
+
+The termination conditions were set at $1 \times 10^{-6}$ for the relative error between estimated integrals per step and 10 as the max amount of iterations. The space dimension $d$ was limited to a maximum of 8 and the amount of points used was increased on each execution from $2^{10}$ to $2^{24}$ (the memory limitations on the original code made it impossible to reach higher dimension numbers). Only for speed comparison purposes, the multi-dimensional paraboloid ($\|x\|^2$) in the $[-1,1]^d$ hypercube was chosen.
 
 The following graph shows the performance of the original and the modified programs, with time normalized by the number of points used and the amount of iterations.
 
@@ -113,6 +115,10 @@ The following graph shows the performance of the original and the modified progr
 It can be observed that both programs perform at almost the same speed at first, but the new program continues to maintain a good performance as the amount of function evaluations increases. More points couldn't be evaluated because of memory restrictions for the original code.
 
 \subsection*{Benchmarking}
+
+The numerical correctness tests for the program were based on Scilab's testing toolbox for Monte Carlo and Quasi Monte Carlo methods\cite{baudin}. The integral of these functions is zero for every dimension. 
+
+
 %As another evaluation for the modified code, six families of functions were tested to check the algorithm's correctness because of the reduction stage remarks mentioned in Section 3. The functions were chosen based in the Cuba integration library paper\cite{hahncuba}:
 
 %\begin{center}
@@ -175,9 +181,9 @@ Cornell preprint CLNS, 1980.
 
 \bibitem{pascal} {\sc{NVIDIA}}, {\em CUDA Pascal Tuning Guide} \textcolor{blue}{http://docs.nvidia.com/cuda/pascal-tuning-guide}.
 
-\bibitem{hahncuba} {\sc{T. Hahn}},
-\emph{Cuba - a library for multidimensional numerical integration},
-Computer Physics Communications, 2005.
+\bibitem{baudin} {\sc{M. Baudin}},
+\emph{The Integration Test Problems Toolbox, version 0.1},
+Scilab, 2010.
 
 \bibitem{cp2016} {\sc{Nicolas Wolovick}},
 {\em Computaci\'on Paralela 2016}, \textcolor{blue}{https://cs.famaf.unc.edu.ar/\~nicolasw/Docencia/CP/2016/index.html},
