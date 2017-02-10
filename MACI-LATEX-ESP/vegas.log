@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.12.7)  10 FEB 2017 11:11
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.12.7)  10 FEB 2017 12:58
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -301,11 +301,11 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10.95> not available
  [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-<comparison.png, id=12, 558.888pt x 265.9536pt>
+<comparison.png, id=12, 578.16pt x 434.5836pt>
 File: comparison.png Graphic file (type png)
  <use comparison.png>
 Package pdftex.def Info: comparison.png used on input line 112.
-(pdftex.def)             Requested size: 422.52054pt x 201.0636pt.
+(pdftex.def)             Requested size: 422.52054pt x 317.59483pt.
 
 Underfull \vbox (badness 6252) has occurred while \output is active []
 
@@ -318,7 +318,7 @@ Here is how much of TeX's memory you used:
  6435 multiletter control sequences out of 15000+600000
  33567 words of font info for 70 fonts, out of 8000000 for 9000
  40 hyphenation exceptions out of 8191
- 38i,6n,26p,782b,290s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 38i,8n,26p,782b,290s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/
 enc/dvips/base/8r.enc}</usr/share/texlive/texmf-dist/fonts/type1/public/amsfont
 s/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/c
@@ -330,7 +330,7 @@ exlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive
 dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type
 1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utm
 ri8a.pfb>
-Output written on vegas.pdf (4 pages, 148540 bytes).
+Output written on vegas.pdf (4 pages, 154987 bytes).
 PDF statistics:
  59 PDF objects out of 1000 (max. 8388607)
  41 compressed objects within 1 object stream
