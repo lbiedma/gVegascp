@@ -10,7 +10,7 @@
 \title{Monte Carlo Integration: the VEGAS algorithm for Graphics Processing Units}
 
 \author[$a$]{Luis Biedma}
-\author[$b$]{Flavio Colavecchia}
+\author[$b$]{Flavio D. Colavecchia}
 \affil[$a$]{FAMAF - Universidad Nacional de C\'ordoba,
 	           CIEM - CONICET,
                \textcolor{blue}{lbiedma@famaf.unc.edu.ar}}
@@ -25,7 +25,7 @@
 
 
 \begin{abstract}
-This work presents a study and modification of the VEGAS integrating algorithm in graphics processing units. The changes made to a reviewed program allow for better performance and use of memory to incorporate more evaluation points, which was an important restriction for the original code on high dimension spaces.
+This work presents a review and modification of the VEGAS integrating algorithm in Graphics Processing Units. The changes made to the program allow for better performance and use of memory to incorporate more evaluation points, which was an important restriction for the original code on high dimension spaces.
 \end{abstract}
 
 \begin{keywords}
@@ -58,10 +58,10 @@ Since its creation, lots of efforts have been made in order to boost Monte Carlo
 
 One of those alternatives is the VEGAS algorithm, created by G.P. Lepage\cite{vegas}. It is based in the concept of \textit{importance sampling}: It samples points from the probability distribution described by the function $\|f\|$ to be integrated, so that the sampling points are concentrated in the regions that make the largest contribution to the integral. VEGAS is based on an iterative and adaptive Monte Carlo scheme: each axis of variable is divided into grids, dividing the integration space into hypercubes. Monte Carlo integrations are performed on each hypercube and the variances from hypercubes are used to adapt the shape of the grids, which will be used in the next iteration, reducing the variance of the total integral at each step.
 
-This work concentrates on the study and improvement of a multi-dimensional VEGAS algorithm, which uses GPUs, created by J. Kanzaki in 2011\cite{kanzaki}.
+The aim of this work is to improve the code of a multi-dimensional VEGAS algorithm, which uses GPUs, created by J. Kanzaki in 2011\cite{kanzaki}.
 
 \section{The Initial Program} 
-Kanzaki's code can be found at \textcolor{blue}{http://madgraph.kek.jp/KEK/GPU/gVEGAS/example/} and creates the basis for the new program. It is written in CUDA language, adapted from FORTRAN code created originally by Lepage\cite{lepagecode}. There is a single and double precision version available in the webpage. The steps followed by the program in each iteration are:
+Kanzaki's code can be found at \textcolor{blue}{http://madgraph.kek.jp/KEK/GPU/gVEGAS/example/} and is used as the basis for the new program. It is written in CUDA language, adapted from FORTRAN code created originally by Lepage\cite{lepagecode}. There is a single and double precision version available in the webpage. The steps followed by the program in each iteration are:
 
 \begin{enumerate}
 	\item Generation of the integration space, dividing it into hypercubes.
@@ -74,11 +74,11 @@ Although this code has great performance relative to the first stages of VEGAS (
 
 There is a considerable amount of data moved between GPU and CPU. The code generates an array of evaluations (one for each point) and also needs to store the hypercube the point is occupying for every dimension in the integration space. So, for every evaluation point, the program needs (\textit{dim}+1) * 4 bytes (in single precision) of RAM, where \textit{dim} is the dimension of the integration space. When working on GPUs, memory management is an important issue and it is not properly addressed in this code.
 
-The complete weighted averages are computed in the CPU, but it can be also done in GPU, because the \textit{reduction} operation is easy to parallelize. The grid evaluation can also work in parallel.
+The complete weighted averages are computed in the CPU, but it can be also performed in GPU, because the \textit{reduction} operation is easy to parallelize. The grid evaluation can also work in parallel.
 
 \section{Modifications}
 
-The new CUDA kernel performs the values (and their squares) reduction, aided by the \textit{atomicAdd} instruction\cite{cudaprog} and also takes the data to a histogram array, which is passed to the CPU to obtain the grid rearrangement for the next iteration. In conclusion, this code merges steps 2 and 3 for the original program.
+The new CUDA kernel performs the values (and their squares) reduction, aided by the \textit{atomicAdd} instruction\cite{cudaprog} and also takes the data to an histogram array, which is passed to the CPU to obtain the grid rearrangement for the next iteration. In conclusion, this code merges steps 2 and 3 for the original program.
 This array has a fixed (very small relative to the amount of points generated) size,
 so there aren't any memory issues.
 
