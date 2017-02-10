@@ -116,7 +116,7 @@ It can be observed that both programs perform at almost the same speed at first,
 
 \subsection*{Benchmarking}
 
-The numerical correctness tests for the program were based on Scilab's testing toolbox for Monte Carlo and Quasi Monte Carlo methods\cite{baudin}. The integral of these functions is zero for every dimension. 
+The numerical correctness tests for the modified program were based on Scilab's testing toolbox for Monte Carlo and Quasi Monte Carlo methods\cite{baudin}. The integral of the functions is zero for every dimension. 17 integrals from this toolbox were tested, with dimensions ranging from 6 to 12, and evaluation points $n = 262144, 524288, 1048576, \dots, 67108864$ (powers of 2 from 18 up to 26). The random number generator used was a version of XORSHIFT available in the repository.
 
 
 %As another evaluation for the modified code, six families of functions were tested to check the algorithm's correctness because of the reduction stage remarks mentioned in Section 3. The functions were chosen based in the Cuba integration library paper\cite{hahncuba}:
