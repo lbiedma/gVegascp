@@ -104,7 +104,7 @@ void myVegasCallFilla(int mds)
 //	f = wgt * sqsum(x, g_ndim);
 //	f = wgt * sumsqroot(x, g_ndim);
 //	f = wgt * prodones(x, g_ndim);
-//	f = wgt * prodexp(x, g_ndim);
+	f = wgt * prodexp(x, g_ndim);
 //	f = wgt * prodcub(x, g_ndim);
 //	f = wgt * prodx(x, g_ndim);
 //	f = wgt * sumfifj(x, g_ndim);
@@ -116,7 +116,7 @@ void myVegasCallFilla(int mds)
 //	f = wgt * rst(x, g_ndim);
 //	f = wgt * sobolprod(x, g_ndim);
 //	f = wgt * oscill(x, g_ndim);
-	f = wgt * prpeak(x, g_ndim);
+//	f = wgt * prpeak(x, g_ndim);
 
 
 	fb += f;

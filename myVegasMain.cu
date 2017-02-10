@@ -125,9 +125,9 @@ int main(int argc, char* argv[])
    std::cout<<"#==========================="<<std::endl;
 
 
-    /* Instructions for time measure
+    /* Instructions for performance measure*/
     char archivo[64];
-    sprintf(archivo, "./datos/redtime/myVegas/red_d%dn%d.dat", ndim0, ncall0);
+    sprintf(archivo, "./datos/testtoolbox/prodexp.dat");
     FILE *f = fopen(archivo, "ab+");
     if (f == NULL)
     {
@@ -135,9 +135,8 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    fprintf(f, "%lf\n", timeVegasCallAndFill/(double)it);
+    fprintf(f, "%d %d %.9lf %.9lf %lf\n", ndim0, ncall0, avgi, sd, timeVegasCallAndFill+timeVegasRefine);
     fclose(f);
-    */
 
    return 0;
 }
