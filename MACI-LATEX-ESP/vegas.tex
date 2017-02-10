@@ -118,46 +118,53 @@ It can be observed that both programs perform at almost the same speed at first,
 
 The numerical correctness tests for the modified program were based on Scilab's testing toolbox for Monte Carlo and Quasi Monte Carlo methods\cite{baudin}. The integral of the functions is zero for every dimension. 17 integrals from this toolbox were tested, with dimensions ranging from $d=6,\dots, 12$, and evaluation points $n = 262144, 524288, 1048576, \dots, 67108864$ (powers of 2 from 18 up to 26) in the $[0, 1]^d$ hypercube. The random number generator used was a version of XORSHIFT available in the repository.
 
-For each amount of evaluation points, the success rate of the program (percentage of integrals along with their standard deviations that are equal to zero) and a normalized average computation time is reported.
+For each function, the success rate of the program (percentage of integrals along with their standard deviations that are equal to zero) and a normalized average computation time is reported.
+
+%\begin{center}
+%	\begin{tabular}{ccc}
+%		\hline
+%		Points & Rate & Time [s] \\
+%		\hline
+%		$2^{18}$ & 42.0\% & $4.133 \times 10^{-9}$\\
+%		$2^{19}$ & 52.4\% & $2.323 \times 10^{-9}$\\
+%		$2^{20}$ & 58.8\% & $2.095 \times 10^{-9}$\\
+%		$2^{21}$ & 80.7\% & $1.463 \times 10^{-9}$\\
+%		$2^{22}$ & 68.1\% & $1.388 \times 10^{-9}$\\
+%		$2^{23}$ & 68.9\% & $1.304 \times 10^{-9}$\\
+%		$2^{24}$ & 67.2\% & $1.298 \times 10^{-9}$\\
+%		$2^{25}$ & 77.3\% & $1.278 \times 10^{-9}$\\
+%		$2^{26}$ & 67.2\% & $1.214 \times 10^{-9}$\\
+%		\hline
+%	\end{tabular}
+%\end{center}
 
 \begin{center}
 	\begin{tabular}{ccc}
 		\hline
-		Points & Rate & Time [s] \\
+		Function & Rate & Time[s] \\
 		\hline
-		$2^{18}$ & 42.0 \% & $4.133 \times 10^{-9}$\\
-		$2^{19}$ & 52.4 \% & $2.323 \times 10^{-9}$\\
-		$2^{20}$ & 58.8 \% & $2.095 \times 10^{-9}$\\
-		$2^{21}$ & 80.7 \% & $1.463 \times 10^{-9}$\\
-		$2^{22}$ & 68.1 \% & $1.388 \times 10^{-9}$\\
-		$2^{23}$ & 68.9 \% & $1.304 \times 10^{-9}$\\
-		$2^{24}$ & 67.2 \% & $1.298 \times 10^{-9}$\\
-		$2^{25}$ & 77.3 \% & $1.278 \times 10^{-9}$\\
-		$2^{26}$ & 67.2 \% & $1.214 \times 10^{-9}$\\
-		\hline
+				SUM & 95.2\% & $1.715 \times 10^{-9}$\\
+				SQSUM & 92.1\% & $1.718 \times 10^{-9}$\\
+				SUMSQROOT & 92.1\% & $1.814 \times 10^{-9}$\\
+				PRODONES & 71.4\% & $1.675 \times 10^{-9}$\\
+				PRODEXP & 49.2\% & $1.908 \times 10^{-9}$\\
+				PRODCUB & 42.8\% & $1.712 \times 10^{-9}$\\
+				PRODX & 38.1\% & $1.716 \times 10^{-9}$\\
+				SUMFIFJ & 38.1\% & $2.010 \times 10^{-9}$\\
+				SUMF1FJ & 46.0\% & $2.551 \times 10^{-9}$\\
+				HELLEKALEK & 100\% & $1.841 \times 10^{-9}$\\
+				ROOSARNOLD1 & 66.7\% & $1.670 \times 10^{-9}$\\
+				ROOSARNOLD2 & 30.2\% & $1.739 \times 10^{-9}$\\
+				ROOSARNOLD3 & 34.9\% & $1.888 \times 10^{-9}$\\
+				RST1 & 57.1\% & $1.722 \times 10^{-9}$\\
+				SOBOLPROD & 95.3\% & $1.858 \times 10^{-9}$\\
+				OSCILL & 84.1\% & $1.771 \times 10^{-9}$\\
+				PRPEAK & 68.3\% & $1.824 \times 10^{-9}$\\
+		
 	\end{tabular}
 \end{center}
 
-Overall, it can be observed that the success rate doesn't necessarily increase with the amount of evaluation points.
-
-%As another evaluation for the modified code, six families of functions were tested to check the algorithm's correctness because of the reduction stage remarks mentioned in Section 3. The functions were chosen based in the Cuba integration library paper\cite{hahncuba}:
-
-%\begin{center}
-%	\begin{tabular}{lll}
-%		\textbf{Oscillatory} & $f_1(x) = cos(c.x+2 \pi w_1)$ \\
-%		\textbf{Product Peak} & $f_2(x) = \prod_{i = 1}^{n_d} \frac{1}{(x_i - w_i)^2 + c_i ^{-2}}$ \\
-%		\textbf{Corner Peak} & $f_3(x) = \frac{1}{(1+c.x)^{n_d+1}}$\\
-%		\textbf{Gaussian} & $f_4(x) = exp(-c^2(x-2)^2)$\\
-%		\textbf{$C^0$-continuous} & $f_5(x) = exp(-c.|x-w|)$\\
-%		\textbf{Discontinuous} & $ f_6(x) =
-%		\begin{cases} 
-%		0 & for \hspace{5pt} x_1 > w_1 \vee x_2 > w_2, \\
-%		exp(c.x) & otherwise \\
-%		\end{cases}$
-%	\end{tabular}
-%\end{center}
-
-
+It can be observed that the program performs well on half of the functions in the toolbox. These results seem disappointing, but the cause for this problem may be a bad combination of dimensions and evaluation points, since some of the functions present a big amount of extremes, which grow with the dimension of the integration space. A finely tuned configuration of these parameters may present better results in the future, along with a different random number generator.
 
 
 \section{Summary and Outlooks}
