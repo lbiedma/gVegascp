@@ -13,6 +13,11 @@ void initzero(void){
       d[dim][box] = 0.0f;
     }
   }
+
+  /* Dos alternativas, cudamemset o armar un 0 para cada hilo y llamar bien al kernel 
+  d[threadIdx.x][threadIdx.y] = 0.0f;
+  */
+
   dti = 0.0f;
   dtsi = 0.0f;
 }
@@ -47,6 +52,13 @@ void myVegasCallFilla(int mds)
      for (int ind = 0; ind < g_nd; ind ++)
      block_d[idim][ind] = 0.0f;
    }
+
+   /* Alternative for above
+   dx = tIdx / g_ndim;
+   dy = tIdx % g_nd;
+   block_d[dx][dy] = 0.0f;
+   */
+
 
    //int ig = tid;
    int lane = tIdx % warpSize;
@@ -157,7 +169,7 @@ void myVegasCallFilla(int mds)
         atomicAdd(&block_f2b, f2b);
       }
 
-		  __syncthreads();
+      __syncthreads();
 
       if (0 == tIdx){
         atomicAdd(&dti, block_fb);
@@ -168,6 +180,8 @@ void myVegasCallFilla(int mds)
         }
       }
     }
+
+
 
     doubleti = (double)dti;
     doubletsi = (double)dtsi;

@@ -191,6 +191,9 @@ void myVegas(double& avgi, double& sd, double& chi2a)
    nGridSizeX = (nBlockTot-1)/nGridSizeY+1;
    //std::cout<<"nGridSize (x,y) = "<<nGridSizeX<<", "<<nGridSizeY<<std::endl;
    dim3 BkGd(nGridSizeX, nGridSizeY);
+   
+   // Get a good grid for initzero()
+   dim3 InitZeroTh(ndim,nd);
 
    if (nprn!=0) {
       std::cout<<std::endl;
@@ -223,9 +226,13 @@ void myVegas(double& avgi, double& sd, double& chi2a)
 
 //      std::cout<<"call gVegasCallFunc: it = "<<it<<std::endl;
       startVegasCallAndFill = omp_get_wtime();
+
+      // Initialize all values to zero, need to make a grid good enough to make everything faster...
       initzero<<<1, 1>>>();
+      // Should be replaced with initzero<<<1,InitZeroTh>>>();
       getLastCudaError("initzero error");
-      //Now CallFilla will need a number of threads equal to the amount of cubes!
+
+      // Now CallFilla will need a number of threads equal to the amount of cubes!
       myVegasCallFilla<<<BkGd, ThBk>>>(mds);
       getLastCudaError("myVegasCallFilla error");
       cudaThreadSynchronize(); // wait for synchronize
