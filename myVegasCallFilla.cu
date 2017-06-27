@@ -99,7 +99,9 @@ void myVegasCallFilla(int mds)
           x[j] = g_xl[j]+rc*g_dx[j];
           wgt *= xo*(float)g_nd;
         }
-	
+
+
+/* Different calls for different functions */	
 //	f = wgt * sum(x, g_ndim);	
 //	f = wgt * sqsum(x, g_ndim);
 //	f = wgt * sumsqroot(x, g_ndim);
@@ -122,6 +124,7 @@ void myVegasCallFilla(int mds)
 	fb += f;
         f2 = f*f;
         f2b += f2;
+
         //If mds = 1, we just have to add f^2 to the corresponding space in d.
         if (mds > 0){
           for (int idim = 0; idim < g_ndim; idim++) {

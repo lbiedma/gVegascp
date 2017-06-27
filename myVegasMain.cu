@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
    std::cout<<"#==========================="<<std::endl;
 
 
-    /* Instructions for performance measure*/
+    /* Instructions for performance measure
     char archivo[64];
     sprintf(archivo, "./datos/testtoolbox/prodexp.dat");
     FILE *f = fopen(archivo, "ab+");
@@ -137,6 +137,6 @@ int main(int argc, char* argv[])
 
     fprintf(f, "%d %d %.9lf %.9lf %lf\n", ndim0, ncall0, avgi, sd, timeVegasCallAndFill+timeVegasRefine);
     fclose(f);
-
+    */
    return 0;
 }
