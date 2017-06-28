@@ -215,10 +215,9 @@ void myVegas(double& avgi, double& sd, double& chi2a)
    double startVegasCallAndFill, endVegasCallAndFill;
    double startVegasRefine, endVegasRefine;
 
-   /*Kickstart Test Functions vectors
-   myVegasStartVectors<<<1, 1>>>();
-   getLastCudaError("Couldn't start vectors");
-   */
+   initzero<<<1,InitZeroTh>>>();
+   getLastCudaError("initzero error");
+
 
    do {
 
@@ -228,10 +227,7 @@ void myVegas(double& avgi, double& sd, double& chi2a)
       startVegasCallAndFill = omp_get_wtime();
 
       // Initialize all values to zero, need to make a grid good enough to make everything faster...
-      initzero<<<1, 1>>>();
-      // Should be replaced with initzero<<<1,InitZeroTh>>>();
-      getLastCudaError("initzero error");
-
+      //initzero<<<1, 1>>>();
       // Now CallFilla will need a number of threads equal to the amount of cubes!
       myVegasCallFilla<<<BkGd, ThBk>>>(mds);
       getLastCudaError("myVegasCallFilla error");
@@ -243,6 +239,10 @@ void myVegas(double& avgi, double& sd, double& chi2a)
 
       endVegasCallAndFill = omp_get_wtime();
       timeVegasCallAndFill += endVegasCallAndFill-startVegasCallAndFill;
+
+      //Initialize to zero before starting CPU computations to do everything at the same time
+      initzero<<<1,InitZeroTh>>>();
+      getLastCudaError("initzero error");
 
       tsi *= dv2g;
       double ti2 = (double)ti*(double)ti;

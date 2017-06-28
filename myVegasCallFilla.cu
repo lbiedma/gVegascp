@@ -8,15 +8,18 @@ __device__ double doubleti, doubletsi;
 
 __global__
 void initzero(void){
+
+/*
   for (int dim = 0; dim < g_ndim; dim++){
     for (int box = 0; box < g_nd; box++){
       d[dim][box] = 0.0f;
     }
   }
+*/
 
-  /* Dos alternativas, cudamemset o armar un 0 para cada hilo y llamar bien al kernel 
+  // Dos alternativas, cudamemset o armar un 0 para cada hilo y llamar bien al kernel 
   d[threadIdx.x][threadIdx.y] = 0.0f;
-  */
+  
 
   dti = 0.0f;
   dtsi = 0.0f;
@@ -48,16 +51,21 @@ void myVegasCallFilla(int mds)
 
    block_fb = 0.0f;
    block_f2b = 0.0f;
+/*   
    for (int idim = 0; idim < g_ndim; idim++){
      for (int ind = 0; ind < g_nd; ind ++)
      block_d[idim][ind] = 0.0f;
    }
+*/
+   /* Alternative for above  */
+      for (int i = 0; i < (g_ndim * g_nd - 1) / bDimx + 1; i++){
+        int xdim = (i * bDimx + tIdx) / g_nd;
+	int xind = (i * bDimx + tIdx) % g_nd;
+	if (xdim < g_ndim){
+	  block_d[xdim][xind] = 0.0f;
+	}
+      }
 
-   /* Alternative for above
-   dx = tIdx / g_ndim;
-   dy = tIdx % g_nd;
-   block_d[dx][dy] = 0.0f;
-   */
 
 
    //int ig = tid;
@@ -114,11 +122,11 @@ void myVegasCallFilla(int mds)
 
 
 /* Different calls for different functions */	
-//	f = wgt * sum(x, g_ndim);	
+	f = wgt * sum(x, g_ndim);	
 //	f = wgt * sqsum(x, g_ndim);
 //	f = wgt * sumsqroot(x, g_ndim);
 //	f = wgt * prodones(x, g_ndim);
-	f = wgt * prodexp(x, g_ndim);
+//	f = wgt * prodexp(x, g_ndim);
 //	f = wgt * prodcub(x, g_ndim);
 //	f = wgt * prodx(x, g_ndim);
 //	f = wgt * sumfifj(x, g_ndim);
@@ -173,16 +181,30 @@ void myVegasCallFilla(int mds)
 
       if (0 == tIdx){
         atomicAdd(&dti, block_fb);
-        atomicAdd(&dtsi, block_f2b);
-        for (int idim = 0; idim < g_ndim; idim++){
-          for (int ind = 0; ind < g_nd; ind ++)
-          atomicAdd(&d[idim][ind], block_d[idim][ind]);
-        }
+        doubleti = (double)dti;
       }
+
+      if (32 == tIdx){
+	atomicAdd(&dtsi, block_f2b);
+        doubletsi = (double)dtsi;
+      }
+
+/* Threaded binning, much better performance */
+      for (int i = 0; i < (g_ndim * g_nd - 1) / bDimx + 1; i++){
+        int xdim = (i * bDimx + tIdx) / g_nd;
+	int xind = (i * bDimx + tIdx) % g_nd;
+	if (xdim < g_ndim){
+	  atomicAdd(&d[xdim][xind], block_d[xdim][xind]);
+	}
+      }
+
+/* Sequential binning, low performance :(       
+      for (int idim = 0; idim < g_ndim; idim++){
+        for (int ind = 0; ind < g_nd; ind ++){
+          atomicAdd(&d[idim][ind], block_d[idim][ind]);
+	}
+      }
+*/     
     }
 
-
-
-    doubleti = (double)dti;
-    doubletsi = (double)dtsi;
 }
